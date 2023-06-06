@@ -4,6 +4,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import matplotlib.pyplot as plt
+import time
+
+start = time.time()
 
 # https://pytorch.org/docs/stable/generated/torch.nn.RNN.html
 
@@ -29,28 +32,29 @@ data_as_tensor = torch.tensor(encoded_text, dtype=torch.long)
 
 # Hyper-parameters
 embedding_dim = 100
-input_size = embedding_dim
-output_size = embedding_dim
+input_size = vocab_size
+output_size = vocab_size
 seq_length = 25
 step_size = 3   # shift of sequences
 
-hidden_size = 200
+hidden_size = 100
 batch_size = 128
 num_layers = 8
-num_epochs = 5
-learning_rate = 0.01
+num_epochs = 3
+learning_rate = 0.001
 
 # https://pytorch.org/docs/stable/generated/torch.nn.RNN.html
-# batch_size = N, seq_length = L, D=1 (directions), Hin = input_size, Hout = hidden_size
+# batch_size = N, seq_length = L, D=1 (directions), Hin = size of the input of the model, i.e. embedding_dim,
+# not "input_size" defined above. Hout = hidden_size
 
 
 def one_hot(tensor):    # one-hot encoding (1 of k representation)
     return (F.one_hot(tensor, num_classes=vocab_size)).to(torch.float32)
 
 
-def embedding(tensor):
+"""def embedding(tensor):
     embed = nn.Embedding(vocab_size, embedding_dim)  # 37 chars in vocab, 100 dimensional embeddings
-    return embed(tensor)
+    return embed(tensor)"""
 
 
 def index_from_hot(encoded_tensor):     # returns index of encoded character
@@ -61,7 +65,7 @@ def char_from_hot(encoded_tensor):      # returns character
     return ix_to_char[torch.argmax(encoded_tensor, dim=0).item()]
 
 
-def test_initialize_seq(train=True):  # initialize inputs and targets sequences
+"""def test_initialize_seq(train=True):  # initialize inputs and targets sequences
     k = int(0.8 * fulltext_len)
     if train:
         text = encoded_text[:k]     # train, 80%
@@ -77,11 +81,11 @@ def test_initialize_seq(train=True):  # initialize inputs and targets sequences
         inputs.append(text[i: i+seq_length])
         targets.append(text[i + seq_length])
 
-    input_tensor = torch.tensor(inputs)
-    target_tensor = torch.tensor(targets)
+    input_tensor = torch.tensor(inputs)     # torch.Size([dim, L]). dim = # of sequences obtained
+    target_tensor = torch.tensor(targets)   # torch.Size([dim]).
     input_hot = one_hot(input_tensor)   # torch.Size([dim, L, Hin]). dim = # of sequences obtained
     target_hot = one_hot(target_tensor)     # torch.Size([dim, Hout]).
-    print(f'input tensor dim: {input_hot.size()}\ntarget tensor dim: {target_hot.size()}')
+    # print(f'input tensor dim: {input_hot.size()}\ntarget tensor dim: {target_hot.size()}')
     num_seq = input_hot.size(0)  # dim
     # split input and target into batches of dimension batch_size
     num_batches = int(float(num_seq-batch_size) / float(batch_size))
@@ -114,16 +118,20 @@ def test_initialize_seq(train=True):  # initialize inputs and targets sequences
             seq_range += batch_size  # but fill it with 100 new sequences (batch_size = 100)
         else:
             break
-    return batched_input, batched_target
+    return batched_input, batched_target"""
 
 
+# incredibly slow with embedding: let's try and embed all sequences before feeding them
 def initialize_seq(train=True):  # initialize inputs and targets sequences
-    print(f'initializing sequences...')
-    k = int(0.8 * fulltext_len)
     if train:
-        text = encoded_text[:k]     # train, 80%
+        print(f'initializing training sequences...')
     else:
-        text = encoded_text[k:]     # evaluate, 20%
+        print(f'initializing validation sequences...')
+    K = int(0.8 * fulltext_len)
+    if train:
+        text = encoded_text[:K]     # train, 80%
+    else:
+        text = encoded_text[K:]     # evaluate, 20%
 
     inputs = []     # input sequences
     targets = []    # target characters for each input seq
@@ -133,19 +141,20 @@ def initialize_seq(train=True):  # initialize inputs and targets sequences
         inputs.append(text[i: i+seq_length])
         targets.append(text[i + seq_length])
 
-    input_tensor = torch.tensor(inputs)
-    target_tensor = torch.tensor(targets)
-    input_hot = one_hot(input_tensor)   # torch.Size([dim, L, Hin]). dim = # of sequences obtained
-    target_hot = one_hot(target_tensor)     # torch.Size([dim, Hout]).
-    num_seq = input_hot.size(0)  # dim
+    input_tensor = torch.tensor(inputs, dtype=torch.int64)     # torch.Size([dim, L]). dim = # of sequences obtained
+    target_tensor = torch.tensor(targets, dtype=torch.int64)   # torch.Size([dim]).
+    # embedding = nn.Embedding(input_size, embedding_dim)
+    # input_emb = embedding(input_tensor)   # torch.Size([dim, L, embedding_dim]). dim = # of sequences obtained
+    # target_emb = embedding(target_tensor)     # torch.Size([dim, embedding_dim]).
+    num_seq = input_tensor.size(0)  # dim
 
     # split input and target into batches of dimension batch_size
     num_batches = int(float(num_seq-batch_size) / float(batch_size))
     # we have num_batches input batches, each of these has length batch_size, and each element is a sequence
-    # of length seq_length. each char of the sequence has dimension 37 (input_size)
-    batched_input = torch.zeros(num_batches, batch_size, seq_length, input_size)
+    # of length seq_length.
+    batched_input = torch.zeros(num_batches, batch_size, seq_length, dtype=torch.int64)
     # for the target we lack seq_length dimension since it's just a series of one char
-    batched_target = torch.zeros(num_batches, batch_size, input_size)
+    batched_target = torch.zeros(num_batches, batch_size, dtype=torch.int64)
 
     b = 0   # batch index
     seq_range = 0   # range of sequences to take from input in order to fill batch b
@@ -153,14 +162,15 @@ def initialize_seq(train=True):  # initialize inputs and targets sequences
         s = 0   # index for batch element
         for seq in range(seq_range, seq_range + batch_size, 1):
             # Each batch element will be a sequence from input
-            batched_input[b] = input_hot[seq]
-            batched_target[b] = target_hot[seq]
+            batched_input[b] = input_tensor[seq]
+            batched_target[b] = target_tensor[seq]
             s += 1
         b += 1  # batch filled: go to new batch
         if seq_range < num_seq - batch_size:
             seq_range += batch_size  # but fill it with 100 new sequences (batch_size = 100)
         else:
             break
+
     return batched_input, batched_target
 
 
@@ -175,25 +185,28 @@ def test_index_from_hot():
 Xtr, Ytr = initialize_seq()     # training set
 Xev, Yev = initialize_seq(train=False)      # validation set
 # print(f'Xtr: {Xtr.size()}, Ytr: {Ytr.size()},\nXev: {Xev.size()}, Yev:{Yev.size()}')
-layer_norm = nn.LayerNorm(vocab_size)
+# layer_norm = nn.LayerNorm(vocab_size)
 
 
 class RNN(nn.Module):
-    def __init__(self, input_size, hidden_size, num_layers):
+    def __init__(self, embedding_dim, hidden_size, num_layers):
         super(RNN, self).__init__()
-        self.embeddings = nn.Embedding(vocab_size, embedding_dim)
+        self.embedding = nn.Embedding(input_size, embedding_dim)   # each char of seq is embedded
+        self.layer_norm = nn.LayerNorm(embedding_dim)
         self.num_layers = num_layers
         self.hidden_size = hidden_size
         self.rnn = nn.RNN(embedding_dim, hidden_size, num_layers, batch_first=True)
         # if batch_first = True : x has to be (batch_size, seq_length, input_size)
-        self.fc = nn.Linear(hidden_size, output_size)  # linear layer
+        self.fc = nn.Linear(hidden_size, output_size)  # linear layer. Change it to nonlinear
 
     def forward(self, x):
         # x.size(0) == batch_size
         # h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(device) # not needed, it's by default
 
         # input shape: (N, L, Hin) or (L, Hin) for unbatched input
-        out, hidden_state = self.rnn(x)
+        x_emb = self.embedding(x)
+        x_emb = self.layer_norm(x_emb)
+        out, hidden_state = self.rnn(x_emb)
         # out is (batch_size, seq_length, hidden_size) or (seq_length, hidden_size) for unbatched
 
         # out: (N, L, Hout). But we don't need all the chars of the sequence, just the last one
@@ -206,12 +219,14 @@ class RNN(nn.Module):
     def sample(self, seed):     # seed can either be a char or a sequence
         self.eval()
         with torch.no_grad():
-            if len(seed) <= 1:  # if seed is a single char
+            """if len(seed) <= 1:  # if seed is a single char
                 seed = one_hot(torch.tensor(char_to_ix[seed]))
                 seed = torch.unsqueeze(seed, 0)  # add dummy dimension for matching size
             else:
                 seed = one_hot(torch.tensor(encode(seed)))
-            # last_state = last_state[:, -1, :]  # squeeze hidden
+            # last_state = last_state[:, -1, :]  # squeeze hidden"""
+            seed = self.embedding(torch.tensor(encode(seed)))
+            seed = self.layer_norm(seed)
             output, _ = self.rnn(seed)
             output = output[-1, :]   # select last char probabilities
             logits = self.fc(output)
@@ -226,7 +241,7 @@ class RNN(nn.Module):
             return ix_to_char[sample_ix]
 
 
-class LSTM(nn.Module):
+"""class LSTM(nn.Module):
     def __init__(self, input_size, hidden_size, num_layers):
         super(LSTM, self).__init__()
         self.num_layers = num_layers
@@ -268,15 +283,26 @@ class LSTM(nn.Module):
             # print(f'maximum probability character following char {char_from_hot(seed[-1])} is {ix_to_char[sample_ix]}')
             # print(f'prob size: {prob.size()}')
             # print(f'sample_ix: {sample_ix}')
-            return ix_to_char[sample_ix]
-
+            return ix_to_char[sample_ix]"""
 
 # model
-model = LSTM(input_size, hidden_size, num_layers).to(device)
+model = RNN(embedding_dim, hidden_size, num_layers).to(device)
+
+
+# test embedding
+def test_embedding():
+    test_seq = Xtr[0][0]
+    test_emb = model.embedding(test_seq)
+    print(f'embedding of test sequence: {test_emb}\nwith size {test_emb.size()}')   # ok
+    # try to embed single char
+    test_char = 'n'
+    char_emb = model.embedding(torch.tensor(char_to_ix[test_char], dtype=torch.long))
+    print(f'embedding of single char: {char_emb}\nwith size {char_emb.size()}')     # ok
+
 
 # Loss and optimizer
 criterion = nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
 
 """# is the model working all right?
 # i.e. is the output actually logits? (log of probabilities of the characters)
@@ -302,8 +328,8 @@ current_loss_tr = 0
 current_loss_ev = 0
 tr_losses = []
 ev_losses = []
-plot_steps = n_iter / 100
-sample_steps = n_iter / 100
+plot_steps = n_iter / 50
+sample_steps = n_iter / 50
 
 tr_batches = Xtr.size(0)
 ev_batches = Xev.size(0)
@@ -316,7 +342,8 @@ for epoch in range(num_epochs):
         b_tr = random.randint(0, tr_batches - 1)
         b_ev = random.randint(0, ev_batches - 1)
 
-        Xb = layer_norm(Xtr[b_tr])
+        # Xb = layer_norm(Xtr[b_tr])
+        Xb = Xtr[b_tr]
         Yb = Ytr[b_tr]
 
         # forward pass
@@ -335,7 +362,8 @@ for epoch in range(num_epochs):
         model.eval()
         with torch.no_grad():
             # evaluate loss on eval set
-            Xevb = layer_norm(Xev[b_ev])
+            # Xevb = layer_norm(Xev[b_ev])
+            Xevb = Xev[b_ev]
             Yevb = Yev[b_ev]
             out, _ = model(Xevb)
             ev_loss = criterion(out, Yevb)
@@ -431,7 +459,10 @@ plt.show()"""
 
 # very small difference, doesn't change much between memory and no memory
 
+end = time.time()
+elapsed_time = end - start
 
+print(f'elapsed time in process: {int(elapsed_time/60)} minutes.\n****list of hyperparameters used:****\nembedding_dim = {embedding_dim},\nseq_length = {seq_length},\nstep_size =  {step_size},\nhidden_size = {hidden_size}, \nbatch_size = {batch_size},\nnum_layers = {num_layers},\nnum_epochs = {num_epochs},\nlearning rate = {learning_rate}')
 
 
 
