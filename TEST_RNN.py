@@ -40,7 +40,7 @@ step_size = 3   # shift of sequences
 hidden_size = 100
 batch_size = 128
 num_layers = 8
-num_epochs = 3
+num_epochs = 1
 learning_rate = 0.001
 
 # https://pytorch.org/docs/stable/generated/torch.nn.RNN.html
@@ -121,7 +121,6 @@ def char_from_hot(encoded_tensor):      # returns character
     return batched_input, batched_target"""
 
 
-# incredibly slow with embedding: let's try and embed all sequences before feeding them
 def initialize_seq(train=True):  # initialize inputs and targets sequences
     if train:
         print(f'initializing training sequences...')
@@ -143,9 +142,6 @@ def initialize_seq(train=True):  # initialize inputs and targets sequences
 
     input_tensor = torch.tensor(inputs, dtype=torch.int64)     # torch.Size([dim, L]). dim = # of sequences obtained
     target_tensor = torch.tensor(targets, dtype=torch.int64)   # torch.Size([dim]).
-    # embedding = nn.Embedding(input_size, embedding_dim)
-    # input_emb = embedding(input_tensor)   # torch.Size([dim, L, embedding_dim]). dim = # of sequences obtained
-    # target_emb = embedding(target_tensor)     # torch.Size([dim, embedding_dim]).
     num_seq = input_tensor.size(0)  # dim
 
     # split input and target into batches of dimension batch_size
@@ -185,8 +181,6 @@ def test_index_from_hot():
 Xtr, Ytr = initialize_seq()     # training set
 Xev, Yev = initialize_seq(train=False)      # validation set
 # print(f'Xtr: {Xtr.size()}, Ytr: {Ytr.size()},\nXev: {Xev.size()}, Yev:{Yev.size()}')
-# layer_norm = nn.LayerNorm(vocab_size)
-
 
 class RNN(nn.Module):
     def __init__(self, embedding_dim, hidden_size, num_layers):
