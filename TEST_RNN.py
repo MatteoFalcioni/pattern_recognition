@@ -31,7 +31,7 @@ data_as_tensor = torch.tensor(encoded_text, dtype=torch.long)
 # split training and evaluation data later on
 
 # Hyper-parameters
-embedding_dim = 100
+embedding_dim = 120
 input_size = vocab_size
 output_size = vocab_size
 seq_length = 25
@@ -40,8 +40,9 @@ step_size = 3   # shift of sequences
 hidden_size = 100
 batch_size = 128
 num_layers = 8
-num_epochs = 1
+num_epochs = 5
 learning_rate = 0.001
+decay_rate = 0.1
 
 # https://pytorch.org/docs/stable/generated/torch.nn.RNN.html
 # batch_size = N, seq_length = L, D=1 (directions), Hin = size of the input of the model, i.e. embedding_dim,
@@ -50,11 +51,6 @@ learning_rate = 0.001
 
 def one_hot(tensor):    # one-hot encoding (1 of k representation)
     return (F.one_hot(tensor, num_classes=vocab_size)).to(torch.float32)
-
-
-"""def embedding(tensor):
-    embed = nn.Embedding(vocab_size, embedding_dim)  # 37 chars in vocab, 100 dimensional embeddings
-    return embed(tensor)"""
 
 
 def index_from_hot(encoded_tensor):     # returns index of encoded character
@@ -235,12 +231,12 @@ class RNN(nn.Module):
             return ix_to_char[sample_ix]
 
 
-"""class LSTM(nn.Module):
+class LSTM(nn.Module):
     def __init__(self, input_size, hidden_size, num_layers):
         super(LSTM, self).__init__()
         self.num_layers = num_layers
         self.hidden_size = hidden_size
-        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
+        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True, dropout=0.2)
         # if batch_first = True : x has to be (batch_size, seq_length, input_size)
         self.fc = nn.Linear(hidden_size, output_size)  # linear layer
 
@@ -260,12 +256,12 @@ class RNN(nn.Module):
     def sample(self, seed):     # seed can either be a char or a sequence
         self.eval()
         with torch.no_grad():
-            if len(seed) <= 1:  # if seed is a single char
+            """if len(seed) <= 1:  # if seed is a single char
                 seed = one_hot(torch.tensor(char_to_ix[seed]))
                 seed = torch.unsqueeze(seed, 0)  # add dummy dimension for matching size
             else:
                 seed = one_hot(torch.tensor(encode(seed)))
-            # last_state = last_state[:, -1, :]  # squeeze hidden
+            # last_state = last_state[:, -1, :]  # squeeze hidden"""
             output, _ = self.lstm(seed)
             output = output[-1, :]   # select last char probabilities
             logits = self.fc(output)
@@ -277,10 +273,12 @@ class RNN(nn.Module):
             # print(f'maximum probability character following char {char_from_hot(seed[-1])} is {ix_to_char[sample_ix]}')
             # print(f'prob size: {prob.size()}')
             # print(f'sample_ix: {sample_ix}')
-            return ix_to_char[sample_ix]"""
+            return ix_to_char[sample_ix]
+
 
 # model
 model = RNN(embedding_dim, hidden_size, num_layers).to(device)
+model = LSTM(embedding_dim, hidden_size, num_layers).to(device)
 
 
 # test embedding
@@ -297,6 +295,8 @@ def test_embedding():
 # Loss and optimizer
 criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
+# implementing lr decay through epochs :
+scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=decay_rate)
 
 """# is the model working all right?
 # i.e. is the output actually logits? (log of probabilities of the characters)
@@ -336,7 +336,6 @@ for epoch in range(num_epochs):
         b_tr = random.randint(0, tr_batches - 1)
         b_ev = random.randint(0, ev_batches - 1)
 
-        # Xb = layer_norm(Xtr[b_tr])
         Xb = Xtr[b_tr]
         Yb = Ytr[b_tr]
 
@@ -356,7 +355,6 @@ for epoch in range(num_epochs):
         model.eval()
         with torch.no_grad():
             # evaluate loss on eval set
-            # Xevb = layer_norm(Xev[b_ev])
             Xevb = Xev[b_ev]
             Yevb = Yev[b_ev]
             out, _ = model(Xevb)
@@ -364,12 +362,15 @@ for epoch in range(num_epochs):
             current_loss_ev += ev_loss.item()
 
         if (i + 1) % plot_steps == 0:
-            print(f'Epoch [{epoch + 1}/{num_epochs}], Step [{i + 1}/{n_iter}], train Loss: {tr_loss.item():.4f}, eval Loss: {ev_loss.item():.4f}')
+            print(f'Epoch [{epoch + 1}/{num_epochs}], Step [{i + 1}/{n_iter}], train Loss: {tr_loss.item():.4f}, eval '
+                  f'Loss: {ev_loss.item():.4f}')
 
             tr_losses.append(current_loss_tr / plot_steps)
             ev_losses.append(current_loss_ev / plot_steps)
             current_loss_tr = 0
             current_loss_ev = 0
+
+    scheduler.step()    # lr = lr*0.1
 
     plt.figure()
     plt.plot(tr_losses, color='blue', label='training loss')
@@ -411,7 +412,7 @@ for i in range(100):
 # how about sampling with a given hidden state and not with all zeros?
 seed_seq = 'nel mezzo del cammin di nostra vita'
 sample_seq = [c for c in seed_seq]
-sample_len = 75
+sample_len = 120
 for k in range(sample_len):
     # print(f'seed sequence: {sample_seq}')
     prediction = model.sample(sample_seq)
@@ -456,7 +457,30 @@ plt.show()"""
 end = time.time()
 elapsed_time = end - start
 
-print(f'elapsed time in process: {int(elapsed_time/60)} minutes.\n****list of hyperparameters used:****\nembedding_dim = {embedding_dim},\nseq_length = {seq_length},\nstep_size =  {step_size},\nhidden_size = {hidden_size}, \nbatch_size = {batch_size},\nnum_layers = {num_layers},\nnum_epochs = {num_epochs},\nlearning rate = {learning_rate}')
+print(f'elapsed time in process: {int(elapsed_time/60)} minutes.\n****list of hyperparameters '
+      f'used:****\nembedding_dim = {embedding_dim},\nseq_length = {seq_length},\nstep_size =  {step_size},'
+      f'\nhidden_size = {hidden_size}, \nbatch_size = {batch_size},\nnum_layers = {num_layers},\nnum_epochs = '
+      f'{num_epochs},\nlearning rate = {learning_rate},\nlr decay factor={decay_rate}')
+
+# what I need to do now:
+# evaluate the efficiency of the model, like sample from a given sequence and see how many times the characters match
+# with the actual targets. make a function for that
+
+# also add learning rate decay THROUGH EPOCHS
+# and last save the best model out of different hyperparameters.
+# PS What is the best model? not only the one with low training loss, but also with
+# low eval loss... So I have to do a for in which I save the best but with the condition that tr_loss and ev_loss
+# shouldn't be too far apart. Actually not this, but the condition that eval_loss remains constant or
+# decreases!! That's a sign of overfitting.
+
+# saving the model
+# FILE = "RNN.pth"
+# torch.save(RNN_model, FILE)    # this is saved in train mode. to use it, put it back to eval with .eval()
+# when you re-create the model, do the following:
+# (i) set up model: for example, model=RNN(...)
+# (ii) load the saved parameters: model.load_state_dict(torch.load(FILE))
+# (iii) send it to GPU: model.to(device)
+
 
 
 
