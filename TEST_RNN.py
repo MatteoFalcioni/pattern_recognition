@@ -13,6 +13,8 @@ start = time.time()
 # Device config
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+model_choice = 'RNN'
+
 # data
 file_name = 'divinacommedia.txt'
 fulltext = open(file_name, 'rb').read().decode(encoding='utf-8').lower()
@@ -31,7 +33,7 @@ data_as_tensor = torch.tensor(encoded_text, dtype=torch.long)
 # split training and evaluation data later on
 
 # Hyper-parameters
-embedding_dim = 120
+embedding_dim = 100
 input_size = vocab_size
 output_size = vocab_size
 seq_length = 25
@@ -39,8 +41,8 @@ step_size = 3   # shift of sequences
 
 hidden_size = 100
 batch_size = 128
-num_layers = 8
-num_epochs = 5
+num_layers = 5
+num_epochs = 1
 learning_rate = 0.001
 decay_rate = 0.1
 
@@ -117,12 +119,12 @@ def char_from_hot(encoded_tensor):      # returns character
     return batched_input, batched_target"""
 
 
+K = int(0.8 * fulltext_len)
 def initialize_seq(train=True):  # initialize inputs and targets sequences
     if train:
         print(f'initializing training sequences...')
     else:
         print(f'initializing validation sequences...')
-    K = int(0.8 * fulltext_len)
     if train:
         text = encoded_text[:K]     # train, 80%
     else:
@@ -136,17 +138,17 @@ def initialize_seq(train=True):  # initialize inputs and targets sequences
         inputs.append(text[i: i+seq_length])
         targets.append(text[i + seq_length])
 
-    input_tensor = torch.tensor(inputs, dtype=torch.int64)     # torch.Size([dim, L]). dim = # of sequences obtained
-    target_tensor = torch.tensor(targets, dtype=torch.int64)   # torch.Size([dim]).
+    input_tensor = torch.tensor(inputs, dtype=torch.int64).to(device)     # torch.Size([dim, L]). dim = # of sequences obtained
+    target_tensor = torch.tensor(targets, dtype=torch.int64).to(device)   # torch.Size([dim]).
     num_seq = input_tensor.size(0)  # dim
 
     # split input and target into batches of dimension batch_size
     num_batches = int(float(num_seq-batch_size) / float(batch_size))
     # we have num_batches input batches, each of these has length batch_size, and each element is a sequence
     # of length seq_length.
-    batched_input = torch.zeros(num_batches, batch_size, seq_length, dtype=torch.int64)
+    batched_input = torch.zeros(num_batches, batch_size, seq_length, dtype=torch.int64).to(device)
     # for the target we lack seq_length dimension since it's just a series of one char
-    batched_target = torch.zeros(num_batches, batch_size, dtype=torch.int64)
+    batched_target = torch.zeros(num_batches, batch_size, dtype=torch.int64).to(device)
 
     b = 0   # batch index
     seq_range = 0   # range of sequences to take from input in order to fill batch b
@@ -177,6 +179,7 @@ def test_index_from_hot():
 Xtr, Ytr = initialize_seq()     # training set
 Xev, Yev = initialize_seq(train=False)      # validation set
 # print(f'Xtr: {Xtr.size()}, Ytr: {Ytr.size()},\nXev: {Xev.size()}, Yev:{Yev.size()}')
+
 
 class RNN(nn.Module):
     def __init__(self, embedding_dim, hidden_size, num_layers):
@@ -230,20 +233,33 @@ class RNN(nn.Module):
             # print(f'sample_ix: {sample_ix}')
             return ix_to_char[sample_ix]
 
+    def accuracy(self, input_seqs, targets):
+        accuracy = 0
+        num_seqs = len(input_seqs)
+        for i in range(num_seqs):
+            predicted_char = self.sample(input_seqs[i])
+            actual_char = targets[i]
+            if actual_char == predicted_char:
+                accuracy += 1.0/float(num_seqs)
+        return accuracy
 
 class LSTM(nn.Module):
-    def __init__(self, input_size, hidden_size, num_layers):
+    def __init__(self, embedding_dim, hidden_size, num_layers):
         super(LSTM, self).__init__()
+        self.embedding = nn.Embedding(input_size, embedding_dim)   # each char of seq is embedded
+        self.layer_norm = nn.LayerNorm(embedding_dim)
         self.num_layers = num_layers
         self.hidden_size = hidden_size
-        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True, dropout=0.2)
+        self.lstm = nn.LSTM(embedding_dim, hidden_size, num_layers, batch_first=True, dropout=0.2)
         # if batch_first = True : x has to be (batch_size, seq_length, input_size)
         self.fc = nn.Linear(hidden_size, output_size)  # linear layer
 
     def forward(self, x):
 
         # input shape: (N, L, Hin) or (L, Hin) for unbatched input
-        out, hidden_state = self.lstm(x)
+        x_emb = self.embedding(x)
+        x_emb = self.layer_norm(x_emb)
+        out, hidden_state = self.lstm(x_emb)
         # out is (batch_size, seq_length, hidden_size) or (seq_length, hidden_size) for unbatched
 
         # out: (N, L, Hout). But we don't need all the chars of the sequence, just the last one
@@ -262,6 +278,8 @@ class LSTM(nn.Module):
             else:
                 seed = one_hot(torch.tensor(encode(seed)))
             # last_state = last_state[:, -1, :]  # squeeze hidden"""
+            seed = self.embedding(torch.tensor(encode(seed)))
+            seed = self.layer_norm(seed)
             output, _ = self.lstm(seed)
             output = output[-1, :]   # select last char probabilities
             logits = self.fc(output)
@@ -277,8 +295,10 @@ class LSTM(nn.Module):
 
 
 # model
-model = RNN(embedding_dim, hidden_size, num_layers).to(device)
-model = LSTM(embedding_dim, hidden_size, num_layers).to(device)
+if model_choice == 'RNN':
+    model = RNN(embedding_dim, hidden_size, num_layers).to(device)
+if model_choice == 'LSTM':
+    model = LSTM(embedding_dim, hidden_size, num_layers).to(device)
 
 
 # test embedding
@@ -296,7 +316,7 @@ def test_embedding():
 criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
 # implementing lr decay through epochs :
-scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=decay_rate)
+scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=2, gamma=decay_rate)
 
 """# is the model working all right?
 # i.e. is the output actually logits? (log of probabilities of the characters)
@@ -420,6 +440,15 @@ for k in range(sample_len):
     sample_seq.append(prediction)
 txt = ''.join(sample_seq)
 print(f'sampled text: {txt}')
+
+inputs = []     # input sequences
+targets = []    # target characters for each input seq
+text = fulltext[K:]
+text_len = len(text)
+for i in range(0, text_len - seq_length, step_size):
+    inputs.append(text[i: i+seq_length])
+    targets.append(text[i + seq_length])
+print(f'{model_choice} accuracy = {model.accuracy(inputs, targets)*100}%')
 
 """# print(f'{h_n}\n{h_n.size()}')
 memory_out, state = model.rnn(x_test, h_n)    # hn last hidden state from training
