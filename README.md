@@ -20,7 +20,7 @@ To understand the structure of an RNN, let’s consider a basic one-layer RNN wi
 The recurrent connection in an RNN is formed by connecting the hidden state from the previous time step $h(t − 1)$ to the current time step $t$. This connection allows the hidden state to influence the computation at the current time step, thus enabling the network to retain information about
 past inputs. This process is called the ''unfolding `` of the RNN and is depicted in the image below.
 
-![](readme_img/recurrence_unfolding.png)
+<img src="readme_img/recurrence_unfolding.png" alt="" width="200">
 
 The equations governing the RNN functioning can be summed up as:
 
@@ -43,7 +43,7 @@ $$h_t = o_t \odot \sigma_h (c_t)$$
 
 The initial values are $c_0=0$ and $h_0=0$ and the operator $\odot$ denotes the element-wise product. The subscript $t$ indexes the time step.
 Here is a sketch of the LSTM architecture:
-![](readme_img/LSTM.png)
+<img src="readme_img//LSTM.png" alt="" width="200">
 
 Finally, GRUs simplify the LSTM architecture by combining the forget and input gates into a single update gate. Additionally, they introduce a reset gate that determines how much of the previous hidden state should be forgotten. This simplification results in a more streamlined architecture with fewer parameters than LSTMs. The following are its equations: 
 
@@ -53,7 +53,7 @@ $$n_t = \tanh (W_{in} x_t + b_{in} + r_t \odot (W_{hn} h_{t-1} + b_{hn})$$
 $$h_t = (1 - z_t) \odot n_t + z_t \odot h_{t-1}$$
 
 and here is a sketch of its architecture:
-![](readme_img/GRU.png)
+<img src="readme_img//GRU.png" alt="" width="200">
 
 **Installation**
 1. Clone the repository:
