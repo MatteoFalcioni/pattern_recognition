@@ -49,17 +49,15 @@ Here is a sketch of the LSTM architecture:
 Finally, GRUs simplify the LSTM architecture by combining the forget and input gates into a single update gate. Additionally, they introduce a reset gate that determines how much of the previous hidden state should be forgotten. This simplification results in a more streamlined architecture with fewer parameters than LSTMs. The following are its equations: 
 
 $$r_t = \sigma_f (W_{ir} x_t + b_{ir} + W_{hr} h_{t-1} + b_{hr})$$
+
 $$z_t = \sigma (W_{iz} x_t + b_{iz} + W_{hz} h_{t-1} + b_{hz})$$
+
 $$n_t = \tanh (W_{in} x_t + b_{in} + r_t \odot (W_{hn} h_{t-1} + b_{hn})$$
+
 $$h_t = (1 - z_t) \odot n_t + z_t \odot h_{t-1}$$
 
 
-
-
-
 and here is a sketch of its architecture:
-
-
 <img src="readme_img//GRU.png" alt="" width="400">
 
 **Installation**
