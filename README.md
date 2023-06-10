@@ -20,7 +20,7 @@ To understand the structure of an RNN, let’s consider a basic one-layer RNN wi
 The recurrent connection in an RNN is formed by connecting the hidden state from the previous time step $h(t − 1)$ to the current time step $t$. This connection allows the hidden state to influence the computation at the current time step, thus enabling the network to retain information about
 past inputs. This process is called the ''unfolding `` of the RNN and is depicted in the image below.
 
-<img src="readme_img/recurrence_unfolding.png" alt="" width="200">
+<img src="readme_img/recurrence_unfolding.png" alt="" width="900">
 
 The equations governing the RNN functioning can be summed up as:
 
