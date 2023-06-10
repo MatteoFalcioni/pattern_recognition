@@ -53,6 +53,10 @@ $$z_t = \sigma (W_{iz} x_t + b_{iz} + W_{hz} h_{t-1} + b_{hz})$$
 $$n_t = \tanh (W_{in} x_t + b_{in} + r_t \odot (W_{hn} h_{t-1} + b_{hn})$$
 $$h_t = (1 - z_t) \odot n_t + z_t \odot h_{t-1}$$
 
+
+
+
+
 and here is a sketch of its architecture:
 
 
