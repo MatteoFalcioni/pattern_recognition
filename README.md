@@ -24,7 +24,7 @@ past inputs. This process is called the ''unfolding `` of the RNN and is depicte
 
 The equations governing the RNN functioning can be summed up as:
 
-- Item 1: $$\mathbf{h}(t) = f \left(\mathbf{W}_{xh}\mathbf{x}(t) + \mathbf{W}_{hh}\mathbf{h}(t-1) + \mathbf{b} \right)$$
+- Item 1: $$\mathbf{h}(t) = f (\mathbf{W}_{xh}\mathbf{x}(t) + \mathbf{W}_{hh}\mathbf{h}(t-1) + \mathbf{b} )$$
 - Item 2: $$\mathbf{y}(t) = g(\mathbf{W}_{hy} \mathbf{h}(t) + \mathbf{c})$$
 
 
