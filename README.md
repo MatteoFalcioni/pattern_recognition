@@ -37,7 +37,7 @@ In the equations below, matrices $W_{\alpha \beta}$ contain the weights of the i
 - Item 2: $$ f_t = \sigma_f (W_{if} x_t + b_{if} + W_{hf} h_{t-1} + b_{hf}) $$
 - Item 3: $$ \Tilde{c}_t = \sigma_c (W_{ic} x_t + b_{ic} + W_{hc} h_{t-1} + b_{hc}) $$
 - Item 4: $$ o_t = \sigma_o (W_{io} x_t + b_{io} + W_{ho} h_{t-1} + b_{ho}) $$
-- Item 5: $$ c_t = f_t \odot c_{t-1} + i_t \odot \Tilde{c}_t \nonumber $$
+- Item 5: $$ c_t = f_t \odot c_{t-1} + i_t \odot \Tilde{c}_t $$
 - Item 6: $$ h_t = o_t \odot \sigma_h (c_t) $$
 
 The initial values are $c_0=0$ and $h_0=0$ and the operator $\odot$ denotes the element-wise product. The subscript $t$ indexes the time step.
