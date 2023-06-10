@@ -14,21 +14,21 @@ Recurrent Neural Networks (RNNs) are a class of neural networks that are well-su
 
 To evaluate the performance of LSTM and GRU models, we train them on a dataset consisting of Dante's Divina Commedia. The models are then used to generate text that resembles the style and language of the original work.
 
-The architecture of an RNN is characterized by recurrent connections, which
-form a directed cycle in the network, allowing information to be circulated and preserved across
-different time steps. These connections enable RNNs to process variable-length input sequences,
-making them flexible and adaptable to different data modalities. 
+The architecture of an RNN is characterized by recurrent connections, which form a directed cycle in the network, allowing information to be circulated and preserved across different time steps. These connections enable RNNs to process variable-length input sequences, making them flexible and adaptable to different data modalities. 
 
-To understand the structure of an RNN, let’s consider a basic one-layer RNN with a single “re-
-current unit”. At each time step $t$, the network receives an input vector $x(t)$ and produces an
-output vector $y(t)$. Additionally, the network maintains a hidden state vector $h(t)$, which acts as
-a memory that encodes information from past time steps. 
-The recurrent connection in an RNN is formed by connecting the hidden state from the previous
-time step $h(t − 1)$ to the current time step $t$. This connection allows the hidden state to influence
-the computation at the current time step, thus enabling the network to retain information about
+To understand the structure of an RNN, let’s consider a basic one-layer RNN with a single “recurrent unit”. At each time step $t$, the network receives an input vector $x(t)$ and produces an output vector $y(t)$. Additionally, the network maintains a hidden state vector $h(t)$, which acts as a memory that encodes information from past time steps. 
+The recurrent connection in an RNN is formed by connecting the hidden state from the previous time step $h(t − 1)$ to the current time step $t$. This connection allows the hidden state to influence the computation at the current time step, thus enabling the network to retain information about
 past inputs. This process is called the ''unfolding `` of the RNN and is depicted in the image below.
 
 ![Depiction of the unfolding of an RNN](readme_img/recurrence_unfolding.png)
+
+The equations governing the RNN functioning can be summed up as:
+
+- Item 1: $$\mathbf{h}(t) = f \left(\mathbf{W}_{xh}\mathbf{x}(t) + \mathbf{W}_{hh}\mathbf{h}(t-1) + \mathbf{b} \right)$$
+- Item 2: $$\mathbf{y}(t) = g(\mathbf{W}_{hy} \mathbf{h}(t) + \mathbf{c})$$
+
+
+Unlicily, RNNs suffer from certain limitations that can hinder their performance on tasks that involve long-term dependencies. These limitations motivated the developmentof more advanced architectures like Long Short-Term Memory (LSTM) network and Gated-Recurrent Units (GRU). 
 
 **Installation**
 1. Clone the repository:
