@@ -43,7 +43,7 @@ $$h_t = o_t \odot \sigma_h (c_t)$$
 
 The initial values are $c_0=0$ and $h_0=0$ and the operator $\odot$ denotes the element-wise product. The subscript $t$ indexes the time step.
 Here is a sketch of the LSTM architecture:
-<img src="readme_img//LSTM.png" alt="" width="200">
+<img src="readme_img//LSTM.png" alt="" width="800">
 
 Finally, GRUs simplify the LSTM architecture by combining the forget and input gates into a single update gate. Additionally, they introduce a reset gate that determines how much of the previous hidden state should be forgotten. This simplification results in a more streamlined architecture with fewer parameters than LSTMs. The following are its equations: 
 
@@ -53,7 +53,7 @@ $$n_t = \tanh (W_{in} x_t + b_{in} + r_t \odot (W_{hn} h_{t-1} + b_{hn})$$
 $$h_t = (1 - z_t) \odot n_t + z_t \odot h_{t-1}$$
 
 and here is a sketch of its architecture:
-<img src="readme_img//GRU.png" alt="" width="200">
+<img src="readme_img//GRU.png" alt="" width="800">
 
 **Installation**
 1. Clone the repository:
