@@ -1,5 +1,3 @@
-import random
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -16,10 +14,9 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # data
 file_name = 'divinacommedia.txt'
 fulltext = open(file_name, 'rb').read().decode(encoding='utf-8').lower()
+
 chars = sorted(list(set(fulltext)))
-# print(chars)
 fulltext_len, vocab_size = len(fulltext), len(chars)
-print('data has %d characters, %d unique.' % (fulltext_len, vocab_size))
 
 # build the vocabulary of characters and mappings to / from integers
 char_to_ix = {ch: i for i, ch in enumerate(chars)}
@@ -27,8 +24,8 @@ ix_to_char = {i: ch for i, ch in enumerate(chars)}
 encode = lambda s: [char_to_ix[c] for c in s]  # encoder : take a string , output a list of integers
 decode = lambda l: ''.join([ix_to_char[i] for i in l])  # decoder : take a list of integers, output a string
 encoded_text = encode(fulltext)
-data_as_tensor = torch.tensor(encoded_text, dtype=torch.long)
-# split training and evaluation data later on
+
+model_choice = 'LSTM'
 
 # Hyper-parameters
 embedding_dim = 100
@@ -40,10 +37,10 @@ step_size = 3   # shift of sequences
 hidden_size = 100
 batch_size = 128
 num_layers = 5
-num_epochs = 20
+num_epochs = 25
 learning_rate = 0.01
 decay_rate = 0.1
-decay_step = 4
+decay_step = 3
 
 # https://pytorch.org/docs/stable/generated/torch.nn.RNN.html
 # batch_size = N, seq_length = L, D=1 (directions), Hin = size of the input of the model, i.e. embedding_dim,
@@ -84,8 +81,8 @@ class DemandDataset(Dataset):
 
 tr_inputs, tr_targets = initialize_seq()
 ev_inputs, ev_targets = initialize_seq(train=False)
-tr_dataset = DemandDataset(torch.tensor(tr_inputs), torch.tensor(tr_targets))
-ev_dataset = DemandDataset(torch.tensor(ev_inputs), torch.tensor(ev_targets))
+tr_dataset = DemandDataset(torch.tensor(tr_inputs).to(device), torch.tensor(tr_targets).to(device))
+ev_dataset = DemandDataset(torch.tensor(ev_inputs).to(device), torch.tensor(ev_targets).to(device))
 tr_dataloader = DataLoader(tr_dataset, shuffle=True, batch_size=batch_size)
 ev_dataloader = DataLoader(ev_dataset, shuffle=True, batch_size=batch_size)
 n_train = len(tr_dataloader)
@@ -162,7 +159,7 @@ class LSTM(nn.Module):
         self.eval()
         with torch.no_grad():
             seed = self.embedding(torch.tensor(encode(seed)))
-            seed = self.layer_norm(seed)
+            # seed = self.layer_norm(seed)
             output, _ = self.lstm(seed)
             output = output[-1, :]
             logits = self.fc(output)
@@ -181,8 +178,10 @@ class LSTM(nn.Module):
         return accuracy
 
 
-# model
-model = LSTM(embedding_dim, hidden_size, num_layers).to(device)
+if model_choice == 'RNN':
+    model = RNN(embedding_dim, hidden_size, num_layers).to(device)
+if model_choice == 'LSTM':
+    model = LSTM(embedding_dim, hidden_size, num_layers).to(device)
 
 # Loss and optimizer
 criterion = nn.CrossEntropyLoss()
@@ -220,7 +219,7 @@ for epoch in range(num_epochs):
         optimizer.step()
 
         # current_loss_tr += tr_loss.item()
-        epoch_tr_loss += tr_loss.item() / float(n_train)
+        epoch_tr_loss += tr_loss.item()*1000 / float(n_train)
 
         """if (tr_step + 1) % plot_steps == 0:
             tr_losses.append(current_loss_tr / plot_steps)
@@ -240,7 +239,7 @@ for epoch in range(num_epochs):
             ev_loss = criterion(out, y)
 
             # current_loss_ev += ev_loss.item()
-            epoch_ev_loss += ev_loss.item() / float(n_train)
+            epoch_ev_loss += ev_loss.item()*1000 / float(n_eval)
 
             """if (ev_step + 1) % 3 == 0:
                 ev_losses.append(current_loss_ev / 3)
@@ -279,10 +278,18 @@ print(f'accuracy = {model.accuracy(ev_inputs, ev_targets)*100}%')
 end = time.time()
 elapsed_time = end - start
 
-print(f'elapsed time in process: {int(elapsed_time/60)} minutes.\n****list of hyperparameters '
-      f'used:****\nembedding_dim = {embedding_dim},\nseq_length = {seq_length},\nstep_size =  {step_size},'
+print(f'elapsed time in process: {int(elapsed_time/60)} minutes.\n***** list of hyperparameters '
+      f'used: *****\nembedding_dim = {embedding_dim},\nseq_length = {seq_length},\nstep_size =  {step_size},'
       f'\nhidden_size = {hidden_size}, \nbatch_size = {batch_size},\nnum_layers = {num_layers},\nnum_epochs = '
-      f'{num_epochs},\nlearning rate = {learning_rate},\nlr decay factor={decay_rate}')
+      f'{num_epochs},\nlearning rate = {learning_rate},\nlr decay factor={decay_rate}\nlr decay step={decay_step}')
+
+# saving the model
+FILE = f'{model_choice}.pth'
+torch.save(model, FILE)    # this is saved in train mode. to use it, put it back to eval with .eval()
+# when you re-create the model, do the following:
+# (i) set up model: for example, model=RNN(...)
+# (ii) load the saved parameters: model.load_state_dict(torch.load(FILE))
+# (iii) send it to GPU: model.to(device)
 
 
 
