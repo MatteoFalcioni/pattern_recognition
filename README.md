@@ -14,6 +14,15 @@ Recurrent Neural Networks (RNNs) are a class of neural networks that are well-su
 
 To evaluate the performance of LSTM and GRU models, we train them on a dataset consisting of Dante's Divina Commedia. The models are then used to generate text that resembles the style and language of the original work.
 
+The architecture of an RNN is characterized by recurrent connections, which
+form a directed cycle in the network, allowing information to be circulated and preserved across
+different time steps. These connections enable RNNs to process variable-length input sequences,
+making them flexible and adaptable to different data modalities. 
+To understand the structure of an RNN, let’s consider a basic one-layer RNN with a single “re-
+current unit”. At each time step $t$, the network receives an input vector $x(t)$ and produces an
+output vector $y(t)$. Additionally, the network maintains a hidden state vector $h(t)$, which acts as
+a memory that encodes information from past time steps
+
 **Installation**
 1. Clone the repository:
 
