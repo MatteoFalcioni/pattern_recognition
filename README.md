@@ -21,11 +21,13 @@ making them flexible and adaptable to different data modalities.
 To understand the structure of an RNN, let’s consider a basic one-layer RNN with a single “re-
 current unit”. At each time step $t$, the network receives an input vector $x(t)$ and produces an
 output vector $y(t)$. Additionally, the network maintains a hidden state vector $h(t)$, which acts as
-a memory that encodes information from past time steps
+a memory that encodes information from past time steps. \\
 The recurrent connection in an RNN is formed by connecting the hidden state from the previous
 time step $h(t − 1)$ to the current time step $t$. This connection allows the hidden state to influence
 the computation at the current time step, thus enabling the network to retain information about
-past inputs.
+past inputs. This process is called the ''unfolding `` of the RNN and is depicted in the image below.
+
+![Depiction of the unfolding of an RNN](readme_img/recurrence_unfolding.png)
 
 **Installation**
 1. Clone the repository:
