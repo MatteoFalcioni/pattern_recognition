@@ -23,7 +23,7 @@ past inputs. This process is called the ''unfolding `` of the RNN and is depicte
 ![Depiction of the unfolding of an RNN](readme_img/recurrence_unfolding.png)
 
 The equations governing the RNN functioning can be summed up as:
-- $$\mathbf{h}(t) = f (\mathbf{W}_{xh}\mathbf{x}(t) + \mathbf{W}_{hh}\mathbf{h}(t-1) + \mathbf{b})$$
+- $$\mathbf{h}(t) = f (\mathbf{W}_{xh}\mathbf{x}(t) + \mathbf{W}_{hh}\mathbf{h}(t-1) + \mathbf{b})$$ 
 - $$\mathbf{y}(t) = g(\mathbf{W}_{hy} \mathbf{h}(t) + \mathbf{c})$$
 
 Unlickily, RNNs suffer from certain limitations (vanishing and exploding gradient issues) that can hinder their performance on tasks that involve long-term dependencies. These limitations motivated the developmentof more advanced architectures like Long Short-Term Memory (LSTM) network and Gated-Recurrent Units (GRU). 
@@ -34,7 +34,7 @@ In the equations below, matrices $W_{\alpha \beta}$ contain the weights of the i
 
 - $$i_t = \sigma_i (W_{ii} x_t + b_{ii} + W_{hi} h_{t-1} + b_{hi})$$
 - $$f_t = \sigma_f (W_{if} x_t + b_{if} + W_{hf} h_{t-1} + b_{hf})$$
-- $$\Tilde{c}_t = \sigma_c (W_{ic} x_t + b_{ic} + W_{hc} h_{t-1} + b_{hc})$$
+- $$ \Tilde{c}_t = \sigma_c (W_{ic} x_t + b_{ic} + W_{hc} h_{t-1} + b_{hc})$$
 - $$o_t = \sigma_o (W_{io} x_t + b_{io} + W_{ho} h_{t-1} + b_{ho})$$
 - $$c_t = f_t \odot c_{t-1} + i_t \odot \Tilde{c}_t$$
 - $$h_t = o_t \odot \sigma_h (c_t)$$
