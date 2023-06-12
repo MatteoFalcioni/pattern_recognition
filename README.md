@@ -24,11 +24,8 @@ past inputs. This process is called the ''unfolding `` of the RNN and is depicte
 
 The equations governing the RNN functioning can be summed up as:
 
-<div style="text-align: center;">
-    <img src="readme_img/RNN_eq.png" alt="" width="300">
-</div>
-
-$$\mathbf{y}(t) = g(\mathbf{W}_{hy} \mathbf{h}(t) + \mathbf{c})$$
+<img src="readme_img/RNN_eq.png" alt="" width="300">
+<img src="readme_img/RNN_eq2.png" alt="" width="300">
 
 Unlickily, RNNs suffer from certain limitations (vanishing and exploding gradient issues) that can hinder their performance on tasks that involve long-term dependencies. These limitations motivated the developmentof more advanced architectures like Long Short-Term Memory (LSTM) network and Gated-Recurrent Units (GRU). 
 
