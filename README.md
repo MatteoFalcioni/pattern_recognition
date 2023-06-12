@@ -51,9 +51,12 @@ Here is a sketch of its architecture:
 <img src="readme_img//GRU.png" alt="" width="400">
 
 ## Project structure
-You can use this program in two ways: you either use a pretrained model, contained in the [pretrained]()
-In order to start the program and get some generated text you have to do the following steps: 
+You can use this program in two ways: 
+* you can use a pretrained model, contained in the [pretrained](pretrained) folder, by typing ... and use it to generate text in the style of Dante's Divina Commedia. 
+* or, you can train the model again by ...
+
+Once you have chosen your goal, in order to start the program you have to do the following steps;
 - First, you can either use the default hyperparameters the model contained in the file [configuration](configuration.txt) by typing 'default' in the command line, or eventually choose your own creating a new configuration file in the syntax of [configuration](configuration.txt). If you choose to do so, you have to specify the path to the new configuration file in the command line. 
-- 
+- Second, 
 
 
