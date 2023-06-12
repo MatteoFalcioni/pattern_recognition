@@ -52,6 +52,6 @@ Here is a sketch of its architecture:
 
 ## Project structure
 In order to start the program and get some generated text you have to do the following steps: 
-Item 1: - First, you can either use the default hyperparameters the model contained in the file [configuration]() or eventually choose your own creating a new configuration file in the syntax of [configuration]().  
+Item 1: - First, you can either use the default hyperparameters the model contained in the file [configuration](configuration.txt) or eventually choose your own creating a new configuration file in the syntax of [configuration](configuration.txt).  
 
 
