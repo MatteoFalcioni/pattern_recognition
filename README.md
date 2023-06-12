@@ -5,6 +5,7 @@ This repository contains the implementation of a Recurrent Neural Network (RNN) 
 
 ## Table of Contents
 - [Introduction](#Introduction)
+- [Usage](#Usage)
 - [Project structure](#Project_structure)
 
 ## Introduction
@@ -50,7 +51,7 @@ Here is a sketch of its architecture:
 
 <img src="readme_img//GRU.png" alt="" width="400">
 
-## Project structure
+## Usage
 You can use this program in two ways: 
 * you can use a pretrained model, contained in the [pretrained](pretrained) folder, and use it to generate text in the style of Dante's Divina Commedia. 
 * or, you can train the model again and then generate text after. 
@@ -64,3 +65,7 @@ as input, otherwise you should type 'generate'. During training, training loss a
 - Finally, you will be asked if you want to save the new learnt parameters and therefore overwrite the pretrained models' parameters in the [pretrained](pretrained) folder. If you are satisfied with the result (i.e. the values of the training loss and the validation loss) then you should save your model in order to use it again. 
 
 Once the program has done all of this, it prints a plot of the training loss and validation loss over the epochs.
+
+##Project Structure
+This is how the project has been divided into blocks: 
+
