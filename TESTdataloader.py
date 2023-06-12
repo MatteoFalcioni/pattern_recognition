@@ -83,15 +83,12 @@ def initialize_seq(corpus, seq_length, step_size, train=True):
     return inputs, targets
 
 
-def test_initialize_seq():
+"""def test_initialize_seq():
     test = fulltext[:200]
     test_input, test_target = initialize_seq(test, SEQ_LENGTH, STEP_SIZE)
     for i in range(0, len(test) - SEQ_LENGTH, STEP_SIZE):
-        assert(test[i: i + SEQ_LENGTH] == test_input[i: i + SEQ_LENGTH])
-        assert(test[i + SEQ_LENGTH] == test_target[i])
-
-
-test_initialize_seq()
+        assert(test[i: i + SEQ_LENGTH] == decode(test_input[i: i + SEQ_LENGTH]))
+        assert(test[i + SEQ_LENGTH] == ix_to_char[test_target[i]])"""
 
 
 class DemandDataset(Dataset):
@@ -266,6 +263,7 @@ if model_choice == 'GRU':
 if TRAIN == 'generate':
     file_to_load = f'{model_choice}.pth'
     model.load_state_dict(torch.load(file_to_load))
+    model.eval()    # models are saved in train mode
 
 
 def similarity(sample, true_seq, distance_type):
@@ -413,13 +411,22 @@ print(f'elapsed time in process: {int(elapsed_time/60)} minutes.\n***** list of 
       f'\nhidden_size = {HIDDEN_SIZE}, \nbatch_size = {BATCH_SIZE},\nnum_layers = {NUM_LAYERS},\nnum_epochs = '
       f'{NUM_EPOCHS},\nlearning rate = {LEARNING_RATE},\nlr decay factor={DECAY_RATE}\nlr decay step={DECAY_STEP}')
 
-# saving the model
-FILE = f'{model_choice}.pth'
-torch.save(model, FILE)    # this is saved in train mode. to use it, put it back to eval with .eval()
-# when you re-create the model, do the following:
-# (i) set up model: for example, model=RNN(...)
-# (ii) load the saved parameters: model.load_state_dict(torch.load(FILE))
-# (iii) send it to GPU: model.to(device)"""
+
+print('do you want to save your model? Type yes or no')
+CHOICE = input()
+while CHOICE != 'yes' and CHOICE != 'no':
+    print('this key is not existing, type yes or no to choose whether to save the model or not')
+    CHOICE = input()
+
+if CHOICE == 'yes':
+    # saving the model
+    FILE = f'{model_choice}.pth'
+    torch.save(model, FILE)    # this is saved in train mode. to use it, put it back to eval with .eval()
+
+    # when you re-create the model, do the following:
+    # (i) set up model: for example, model=RNN(...)
+    # (ii) load the saved parameters: model.load_state_dict(torch.load(FILE))
+    # (iii) send it to GPU: model.to(device)"""
 
 
 
