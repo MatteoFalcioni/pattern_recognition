@@ -62,4 +62,5 @@ Once you have chosen your goal, in order to start the program you have to do the
 - Third, you must choose if you want to train your model or use a pretrained one to generate text. If you choose the first option, you must type 'train'
 as input, otherwise you should type 'generate'. During training, training loss and validation loss are printed at every epoch in order to check for overfitting; 
 - Finally, you will be asked if you want to save the new learnt parameters and therefore overwrite the pretrained models' parameters in the [pretrained](pretrained) folder. If you are satisfied with the result (i.e. the values of the training loss and the validation loss) then you should save your model in order to use it again. 
+
 Once the program has done all of this, it prints a plot of the training loss and validation loss over the epochs.
