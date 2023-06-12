@@ -56,7 +56,7 @@ You can use this program in two ways:
 * you can use a pretrained model, contained in the [pretrained](pretrained) folder, to generate text in the style of Dante's Divina Commedia. 
 * or, you can train the model again and then generate text after. 
 
-Once you have chosen your goal, in order to start the program you have to do the following steps after launching the file RNN.py:
+Once you have chosen your goal, in order to start the program you have to do the following steps after launching the file [RNN.py](RNN.py):
 
 - First, you can either use the default hyperparameters for the model contained in the file [configuration](configuration.txt) by typing 'default' in the command line, or eventually choose your own creating a new configuration file in the syntax of [configuration](configuration.txt). If you choose to do so, you have to specify the path to the new configuration file in the command line;
 - Second, you will be asked what model do you want to use. Choice is between RNN, LSTM or GRU;
