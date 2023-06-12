@@ -50,9 +50,6 @@ Here is a sketch of its architecture:
 
 <img src="readme_img//GRU.png" alt="" width="400">
 
-**Installation**
-1. Clone the repository:
-
-git clone https://github.com/yourusername/yourprojectname.git
+##Project structure
 
 
