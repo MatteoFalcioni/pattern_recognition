@@ -35,17 +35,7 @@ A common LSTM unit is composed of a cell, an input gate, an output gate and a fo
 
 In the equations below, matrices $W_{\alpha \beta}$ contain the weights of the input and recurrent connections, where the subscripts $\alpha ,\beta$ will be referring to weights for transitions from gate $\alpha$ to gate $\beta$, which could be input gate $i$, output gate $o$, the forget gate $f$ or the memory cell $c$. In the same way, $b_{\alpha \beta}$ will refer to biases for the layers, and $\sigma_\alpha$ will be the activation functions of the gates.
 
-$$i_t = \sigma_i (W_{ii} x_t + b_{ii} + W_{hi} h_{t-1} + b_{hi})$$
-
-$$f_t = \sigma_f (W_{if} x_t + b_{if} + W_{hf} h_{t-1} + b_{hf})$$
-
-$$ \Tilde{c}_t = \sigma_c (W_{ic} x_t + b_{ic} + W_{hc} h_{t-1} + b_{hc})$$
-
-$$o_t = \sigma_o (W_{io} x_t + b_{io} + W_{ho} h_{t-1} + b_{ho})$$
-
-$$c_t = f_t \odot c_{t-1} + i_t \odot \Tilde{c}_t$$
-
-$$h_t = o_t \odot \sigma_h (c_t)$$
+<img src="readme_img/LSTM_eqs.png" alt="" width="300">
 
 The initial values are $c_0=0$ and $h_0=0$ and the operator $\odot$ denotes the element-wise product. The subscript $t$ indexes the time step.
 Here is a sketch of the LSTM architecture:
@@ -54,14 +44,7 @@ Here is a sketch of the LSTM architecture:
 
 Finally, GRUs simplify the LSTM architecture by combining the forget and input gates into a single update gate. Additionally, they introduce a reset gate that determines how much of the previous hidden state should be forgotten. This simplification results in a more streamlined architecture with fewer parameters than LSTMs. The following are its equations: 
 
-$$r_t = \sigma_f (W_{ir} x_t + b_{ir} + W_{hr} h_{t-1} + b_{hr})$$
-
-$$z_t = \sigma (W_{iz} x_t + b_{iz} + W_{hz} h_{t-1} + b_{hz})$$
-
-$$n_t = \tanh (W_{in} x_t + b_{in} + r_t \odot (W_{hn} h_{t-1} + b_{hn})$$
-
-$$h_t = (1 - z_t) \odot n_t + z_t \odot h_{t-1}$$
-
+<img src="readme_img//GRU_eqs.png" alt="" width="400">
 
 and here is a sketch of its architecture:
 <img src="readme_img//GRU.png" alt="" width="400">
