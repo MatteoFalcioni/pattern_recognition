@@ -4,7 +4,10 @@ import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
 import matplotlib.pyplot as plt
 import time
+from scipy.spatial import distance
+import configparser
 
+config = configparser.ConfigParser()
 start = time.time()
 
 # https://pytorch.org/docs/stable/generated/torch.nn.RNN.html
@@ -23,9 +26,8 @@ char_to_ix = {ch: i for i, ch in enumerate(chars)}
 ix_to_char = {i: ch for i, ch in enumerate(chars)}
 encode = lambda s: [char_to_ix[c] for c in s]  # encoder : take a string , output a list of integers
 decode = lambda l: ''.join([ix_to_char[i] for i in l])  # decoder : take a list of integers, output a string
-encoded_text = encode(fulltext)
 
-model_choice = 'GRU'
+model_choice = 'LSTM'
 
 # Hyper-parameters
 SEQ_LENGTH = 25
@@ -38,16 +40,17 @@ HIDDEN_SIZE = 100
 BATCH_SIZE = 128
 NUM_LAYERS = 5
 
-NUM_EPOCHS = 25
-LEARNING_RATE = 0.01
-DECAY_RATE = 0.5
-DECAY_STEP = 5
+NUM_EPOCHS = 40
+LEARNING_RATE = 0.5     # 0.1 works alright for RNN until epoch 12, 0.5 seems to work better for LSTM until epoch 25
+DECAY_RATE = 0.1
+DECAY_STEP = 35
 
 # https://pytorch.org/docs/stable/generated/torch.nn.RNN.html
 # batch_size = N, seq_length = L, D=1 (directions), Hin = size of the input of the model, i.e. embedding_dim
 
 
-def initialize_seq(seq_length, step_size, train=True):
+def initialize_seq(corpus, seq_length, step_size, train=True):
+    encoded_text = encode(corpus)
     k = int(0.8 * fulltext_len)
     if train:
         text = encoded_text[:k]     # train, 80%
@@ -65,6 +68,10 @@ def initialize_seq(seq_length, step_size, train=True):
     return inputs, targets
 
 
+def test_initialize_seq():
+    return 'test'
+
+
 class DemandDataset(Dataset):
     def __init__(self, X_train, y_train):
         self.X_train = X_train
@@ -79,8 +86,8 @@ class DemandDataset(Dataset):
         return data, labels
 
 
-tr_inputs, tr_targets = initialize_seq(SEQ_LENGTH, STEP_SIZE)
-ev_inputs, ev_targets = initialize_seq(SEQ_LENGTH, STEP_SIZE, train=False)
+tr_inputs, tr_targets = initialize_seq(fulltext, SEQ_LENGTH, STEP_SIZE)
+ev_inputs, ev_targets = initialize_seq(fulltext, SEQ_LENGTH, STEP_SIZE, train=False)
 tr_dataset = DemandDataset(torch.tensor(tr_inputs).to(device), torch.tensor(tr_targets).to(device))
 ev_dataset = DemandDataset(torch.tensor(ev_inputs).to(device), torch.tensor(ev_targets).to(device))
 tr_dataloader = DataLoader(tr_dataset, shuffle=True, batch_size=BATCH_SIZE)
@@ -102,7 +109,7 @@ class RNN(nn.Module):
 
     def forward(self, x):
         x_emb = self.embedding(x)
-        x_emb = self.layer_norm(x_emb)
+        # x_emb = self.layer_norm(x_emb)
         out, hidden_state = self.rnn(x_emb)
 
         if x.size(0) > 1:
@@ -122,7 +129,7 @@ class RNN(nn.Module):
             sample_ix = torch.multinomial(prob, 1, replacement=True).item()
             return ix_to_char[sample_ix]
 
-    def accuracy(self, input_seqs, targets):
+    def accuracy(self, input_seqs, targets):    # probably not needed
         accuracy = 0
         num_seqs = len(input_seqs)
         for i in range(num_seqs):
@@ -131,6 +138,14 @@ class RNN(nn.Module):
             if actual_char == predicted_char:
                 accuracy += 1.0/float(num_seqs)
         return accuracy
+
+
+def test_sample():
+    return 'test sample'
+
+
+def test_accuracy():
+    return 'test accuracy'
 
 
 class LSTM(nn.Module):
@@ -218,13 +233,52 @@ class GRU(nn.Module):
                 accuracy += 1.0/float(num_seqs)
         return accuracy
 
-
 if model_choice == 'RNN':
     model = RNN(INPUT_SIZE, OUTPUT_SIZE, EMBEDDING_DIM, HIDDEN_SIZE, NUM_LAYERS).to(device)
 if model_choice == 'LSTM':
     model = LSTM(INPUT_SIZE, OUTPUT_SIZE, EMBEDDING_DIM, HIDDEN_SIZE, NUM_LAYERS).to(device)
 if model_choice == 'GRU':
     model = GRU(INPUT_SIZE, OUTPUT_SIZE, EMBEDDING_DIM, HIDDEN_SIZE, NUM_LAYERS).to(device)
+
+
+def similarity(sample, true_seq, distance_type):
+    seq_len = len(sample)
+    sample = encode(sample)     # distance expects arrays, not strings
+    true_seq = encode(true_seq)
+    if distance_type == 'hamming':
+        d = round(distance.hamming(sample, true_seq) * seq_len)
+    if distance_type == 'cosine':
+        d = distance.cosine(sample, true_seq)
+    return d
+
+
+def test_similarity(system):
+    seed_seq = 'nel mezzo del cammin di nostra vita'
+    sample_seq = [c for c in seed_seq]
+    sample_len = 50
+    for step in range(sample_len):
+        prediction = system.sample(sample_seq)
+        sample_seq.append(prediction)
+
+    seq1 = sample_seq
+    seq2 = fulltext[:len(sample_seq)]
+    seq1_enc = encode(seq1)
+    seq2_enc = encode(seq2)
+    assert(len(seq1_enc) == len(seq2_enc))
+
+    d0_ham = distance.hamming(seq1_enc, seq1_enc)
+    d0_cos = distance.cosine(seq1_enc, seq1_enc)
+
+    assert(d0_ham < 0.0001)
+    assert(d0_cos < 0.0001)
+
+    d1 = round(distance.hamming(seq1_enc, seq2_enc) * len(seq1_enc))
+    d2 = distance.cosine(seq1_enc, seq2_enc)
+
+    return d1, d2
+
+# print(f'hamming distance, cosine distance: {test_similarity(model)}')
+
 
 # Loss and optimizer
 criterion = nn.CrossEntropyLoss()
@@ -244,14 +298,14 @@ epoch_ev_loss = 0
 epoch_tr_losses = []
 epoch_ev_losses = []
 
-print('starting training and evaluation...')
+"""print('starting training and evaluation...')
 for epoch in range(NUM_EPOCHS):
     print(f'epoch [{epoch}/{NUM_EPOCHS}]')
     for X, y in tr_dataloader:
         # training
         model.train()
 
-        tr_step += 1
+        # tr_step += 1
         # forward pass
         outputs, h_n = model(X)
         tr_loss = criterion(outputs, y)
@@ -264,10 +318,10 @@ for epoch in range(NUM_EPOCHS):
         # current_loss_tr += tr_loss.item()
         epoch_tr_loss += tr_loss.item() / float(n_train)
 
-        """if (tr_step + 1) % plot_steps == 0:
-            tr_losses.append(current_loss_tr / plot_steps)
-        current_loss_tr = 0"""
-    tr_step = 0
+        # if (tr_step + 1) % plot_steps == 0:
+        #    tr_losses.append(current_loss_tr / plot_steps)
+        # current_loss_tr = 0
+    # tr_step = 0
     epoch_tr_losses.append(epoch_tr_loss)
     epoch_tr_loss = 0
 
@@ -275,7 +329,7 @@ for epoch in range(NUM_EPOCHS):
         # evaluation
         model.eval()
 
-        ev_step += 1
+        # ev_step += 1
         with torch.no_grad():
             # evaluate loss on eval set
             out, _ = model(X)
@@ -284,10 +338,10 @@ for epoch in range(NUM_EPOCHS):
             # current_loss_ev += ev_loss.item()
             epoch_ev_loss += ev_loss.item() / float(n_eval)
 
-            """if (ev_step + 1) % 3 == 0:
-                ev_losses.append(current_loss_ev / 3)
-            current_loss_ev = 0"""
-    ev_step = 0
+            # if (ev_step + 1) % 3 == 0:
+            #     ev_losses.append(current_loss_ev / 3)
+            # current_loss_ev = 0
+    # ev_step = 0
     epoch_ev_losses.append(epoch_ev_loss)
     epoch_ev_loss = 0
 
@@ -313,10 +367,18 @@ sample_len = 250
 for step in range(sample_len):
     prediction = model.sample(sample_seq)
     sample_seq.append(prediction)
-txt = ''.join(sample_seq)
-print(f'sampled text: {txt}')
+sampled_txt = ''.join(sample_seq)
+print(f'sampled text: {sampled_txt}')
 
-print(f'accuracy = {model.accuracy(ev_inputs, ev_targets)*100}%')
+true_text = fulltext[:len(sample_seq)]
+
+hamming_d = distance(sampled_txt, true_text, 'hamming')
+cosine_d = distance(sampled_txt, true_text, 'cosine')
+
+print(f'computing distances between sampled string and real string:\nhamming distance = {hamming_d}\ncosine '
+      f'similarity = {cosine_d}')
+
+# print(f'accuracy = {model.accuracy(ev_inputs, ev_targets)*100}%')
 
 end = time.time()
 elapsed_time = end - start
@@ -332,8 +394,7 @@ torch.save(model, FILE)    # this is saved in train mode. to use it, put it back
 # when you re-create the model, do the following:
 # (i) set up model: for example, model=RNN(...)
 # (ii) load the saved parameters: model.load_state_dict(torch.load(FILE))
-# (iii) send it to GPU: model.to(device)
-
+# (iii) send it to GPU: model.to(device)"""
 
 
 
