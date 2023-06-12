@@ -46,6 +46,8 @@ Finally, GRUs simplify the LSTM architecture by combining the forget and input g
 
 <img src="readme_img//GRU_eqs.png" alt="" width="400">
 
+where $r_t, z_t, n_t$ are the reset, update, and new gates, respectively. $\sigma$ is the sigmoid function, and $\odot$ is the Hadamard product.
+
 and here is a sketch of its architecture:
 <img src="readme_img//GRU.png" alt="" width="400">
 
