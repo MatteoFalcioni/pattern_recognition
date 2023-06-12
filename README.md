@@ -60,12 +60,11 @@ Once you have chosen your goal, in order to start the program you have to do the
 
 - First, you can either use the default hyperparameters for the model contained in the file [configuration](configuration.txt) by typing 'default' in the command line, or eventually choose your own creating a new configuration file in the syntax of [configuration](configuration.txt). If you choose to do so, you have to specify the path to the new configuration file in the command line;
 - Second, you can choose the model you want to use. Choice is between RNN, LSTM or GRU;
-- Third, you must choose if you want to train your model or use a [pretrained](pretrained) one to generate text. If you choose the first option, you must type 'train'
-as input, otherwise you should type 'generate'. During training, training loss and validation loss are printed at every epoch in order to check for overfitting; 
+- Third, you must choose if you want to train your model or use a [pretrained](pretrained) one to generate text. If you choose the first option, you must type 'train' as input, otherwise you should type 'generate'. During training, training loss and validation loss are printed at every epoch in order to check for overfitting. Such data are stored in the [toplot](toplot) file; 
 - Finally, you will be asked if you want to save the new learnt parameters and therefore overwrite the pretrained models' parameters in the [pretrained](pretrained) folder. If you are satisfied with the result (i.e. the values of the training loss and the validation loss) then you should save your model in order to use it again. 
 
-Once the program has done all of this, it prints a plot of the training loss and validation loss over the epochs.
+If you want to print out the stored data, you must launch the file plot.py
 
-##Project Structure
+## Project Structure
 This is how the project has been divided into blocks: 
 
