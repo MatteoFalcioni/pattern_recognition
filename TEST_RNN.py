@@ -1,76 +1,77 @@
-import random
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.utils.data import Dataset, DataLoader
 import matplotlib.pyplot as plt
 import time
+from scipy.spatial import distance
+import sys
+from sys import argv
+import configparser
 
 start = time.time()
 
-# https://pytorch.org/docs/stable/generated/torch.nn.RNN.html
+print('please, insert the configuration file name in order to get the hyperparameters. If you want to use default hyperparameters, type: default')
+config = configparser.ConfigParser()
+config_filename = input()
+#config_filename = config.read(sys.argv[1])
+if config_filename == 'default':
+    config.read('configuration.txt')
 
 # Device config
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-model_choice = 'RNN'
-
 # data
 file_name = 'divinacommedia.txt'
 fulltext = open(file_name, 'rb').read().decode(encoding='utf-8').lower()
+
 chars = sorted(list(set(fulltext)))
-# print(chars)
 fulltext_len, vocab_size = len(fulltext), len(chars)
-print('data has %d characters, %d unique.' % (fulltext_len, vocab_size))
 
 # build the vocabulary of characters and mappings to / from integers
 char_to_ix = {ch: i for i, ch in enumerate(chars)}
 ix_to_char = {i: ch for i, ch in enumerate(chars)}
 encode = lambda s: [char_to_ix[c] for c in s]  # encoder : take a string , output a list of integers
 decode = lambda l: ''.join([ix_to_char[i] for i in l])  # decoder : take a list of integers, output a string
-encoded_text = encode(fulltext)
-data_as_tensor = torch.tensor(encoded_text, dtype=torch.long)
-# split training and evaluation data later on
 
-# Hyper-parameters
-embedding_dim = 100
-input_size = vocab_size
-output_size = vocab_size
-seq_length = 25
-step_size = 3   # shift of sequences
+print('please, insert the RNN model you want to use. Choices are between: RNN, LSTM, GRU')
+model_choice = input()
+# model_choice = config.read(sys.argv[1])
+if model_choice != 'GRU' and model_choice != 'LSTM' and model_choice != 'RNN':
+    raise ValueError(f'model {model_choice} does not exist. Please insert one between RNN, LSTM, GRU')
 
-hidden_size = 100
-batch_size = 128
-num_layers = 5
-num_epochs = 1
-learning_rate = 0.001
-decay_rate = 0.1
+print('All right! Now, type train if you want to train the model, type generate if you just want to generate text')
+TRAIN = input()
+if TRAIN != 'train' and TRAIN != 'generate':
+    raise ValueError(f'model {model_choice} is an invalid keyword. Choose between train or generate.')
+
+# hyperparameters
+SEQ_LENGTH = int(config.get('Hyperparameters', 'SEQ_LENGTH'))
+STEP_SIZE = int(config.get('Hyperparameters', 'STEP_SIZE'))     # shift of sequences
+EMBEDDING_DIM = int(config.get('Hyperparameters', 'EMBEDDING_DIM'))
+HIDDEN_SIZE = int(config.get('Hyperparameters', 'HIDDEN_SIZE'))
+BATCH_SIZE = int(config.get('Hyperparameters', 'BATCH_SIZE'))
+NUM_LAYERS = int(config.get('Hyperparameters', 'NUM_LAYERS'))
+NUM_EPOCHS = int(config.get('Hyperparameters', 'NUM_EPOCHS'))
+LEARNING_RATE = float(config.get('Hyperparameters', 'LEARNING_RATE'))   # 0.1 works alright for RNN until epoch 12, 0.5 seems to work better for LSTM until epoch 25. 0.5 works for gru until 10
+DECAY_RATE = float(config.get('Hyperparameters', 'DECAY_RATE'))
+DECAY_STEP = int(config.get('Hyperparameters', 'DECAY_STEP'))
+
+INPUT_SIZE = vocab_size
+OUTPUT_SIZE = vocab_size
+
 
 # https://pytorch.org/docs/stable/generated/torch.nn.RNN.html
-# batch_size = N, seq_length = L, D=1 (directions), Hin = size of the input of the model, i.e. embedding_dim,
-# not "input_size" defined above. Hout = hidden_size
+# batch_size = N, seq_length = L, D=1 (directions), Hin = size of the input of the model, i.e. embedding_dim
 
 
-def one_hot(tensor):    # one-hot encoding (1 of k representation)
-    return (F.one_hot(tensor, num_classes=vocab_size)).to(torch.float32)
-
-
-def index_from_hot(encoded_tensor):     # returns index of encoded character
-    return torch.argmax(encoded_tensor, dim=0)
-
-
-def char_from_hot(encoded_tensor):      # returns character
-    return ix_to_char[torch.argmax(encoded_tensor, dim=0).item()]
-
-
-"""def test_initialize_seq(train=True):  # initialize inputs and targets sequences
-    k = int(0.8 * fulltext_len)
+def initialize_seq(corpus, seq_length, step_size, train=True):
+    encoded_text = encode(corpus)
+    k = int(0.8 * len(corpus))
     if train:
         text = encoded_text[:k]     # train, 80%
     else:
         text = encoded_text[k:]     # evaluate, 20%
 
-    # print(f'{encoded_text[k-10:k]} \n{encoded_text[k-1:k+2]}')
     inputs = []     # input sequences
     targets = []    # target characters for each input seq
 
@@ -79,110 +80,43 @@ def char_from_hot(encoded_tensor):      # returns character
         inputs.append(text[i: i+seq_length])
         targets.append(text[i + seq_length])
 
-    input_tensor = torch.tensor(inputs)     # torch.Size([dim, L]). dim = # of sequences obtained
-    target_tensor = torch.tensor(targets)   # torch.Size([dim]).
-    input_hot = one_hot(input_tensor)   # torch.Size([dim, L, Hin]). dim = # of sequences obtained
-    target_hot = one_hot(target_tensor)     # torch.Size([dim, Hout]).
-    # print(f'input tensor dim: {input_hot.size()}\ntarget tensor dim: {target_hot.size()}')
-    num_seq = input_hot.size(0)  # dim
-    # split input and target into batches of dimension batch_size
-    num_batches = int(float(num_seq-batch_size) / float(batch_size))
-    # we have num_batches input batches, each of these has length batch_size, and each element is a sequence
-    # of length seq_length. each char of the sequence has dimension 37 (input_size)
-    batched_input = torch.zeros(num_batches, batch_size, seq_length, input_size)
-    # for the target we lack seq_length dimension since it's just a series of one char
-    batched_target = torch.zeros(num_batches, batch_size, input_size)
-
-    b = 0   # batch index
-    seq_range = 0   # range of sequences to take from input in order to fill batch b
-    while b < 4:  # < num_batches:
-        s = 0   # index for batch element
-        for seq in range(seq_range, seq_range + batch_size, 1):
-            print(f'batch={b}')
-            # Each batch element will be a sequence from input
-            print(f'sequence #{seq}, i.e. input hot[{seq}][:][:] =')
-            for i in range(seq_length):
-                print(f'{char_from_hot(input_hot[seq][i])}')
-
-            print(f'has to be put as batch #{b} {s}-th element')
-            batched_input[b] = input_hot[seq]     # fill b-th batch with batch_size sequences
-            batched_target[b] = target_hot[seq]   # and select target
-            for i in range(seq_length):
-                print(f'batched input: {char_from_hot(batched_input[b][s][i])}')
-            print(f'target ---> {char_from_hot(batched_target[b][s])}')
-            s += 1
-        b += 1  # batch filled: go to new batch
-        if seq_range < num_seq - batch_size:  # < num_seq - batch_size
-            seq_range += batch_size  # but fill it with 100 new sequences (batch_size = 100)
-        else:
-            break
-    return batched_input, batched_target"""
+    return inputs, targets
 
 
-K = int(0.8 * fulltext_len)
-def initialize_seq(train=True):  # initialize inputs and targets sequences
-    if train:
-        print(f'initializing training sequences...')
-    else:
-        print(f'initializing validation sequences...')
-    if train:
-        text = encoded_text[:K]     # train, 80%
-    else:
-        text = encoded_text[K:]     # evaluate, 20%
-
-    inputs = []     # input sequences
-    targets = []    # target characters for each input seq
-
-    text_len = len(text)
-    for i in range(0, text_len - seq_length, step_size):
-        inputs.append(text[i: i+seq_length])
-        targets.append(text[i + seq_length])
-
-    input_tensor = torch.tensor(inputs, dtype=torch.int64).to(device)     # torch.Size([dim, L]). dim = # of sequences obtained
-    target_tensor = torch.tensor(targets, dtype=torch.int64).to(device)   # torch.Size([dim]).
-    num_seq = input_tensor.size(0)  # dim
-
-    # split input and target into batches of dimension batch_size
-    num_batches = int(float(num_seq-batch_size) / float(batch_size))
-    # we have num_batches input batches, each of these has length batch_size, and each element is a sequence
-    # of length seq_length.
-    batched_input = torch.zeros(num_batches, batch_size, seq_length, dtype=torch.int64).to(device)
-    # for the target we lack seq_length dimension since it's just a series of one char
-    batched_target = torch.zeros(num_batches, batch_size, dtype=torch.int64).to(device)
-
-    b = 0   # batch index
-    seq_range = 0   # range of sequences to take from input in order to fill batch b
-    while b < num_batches:
-        s = 0   # index for batch element
-        for seq in range(seq_range, seq_range + batch_size, 1):
-            # Each batch element will be a sequence from input
-            batched_input[b] = input_tensor[seq]
-            batched_target[b] = target_tensor[seq]
-            s += 1
-        b += 1  # batch filled: go to new batch
-        if seq_range < num_seq - batch_size:
-            seq_range += batch_size  # but fill it with 100 new sequences (batch_size = 100)
-        else:
-            break
-
-    return batched_input, batched_target
+"""def test_initialize_seq():
+    test = fulltext[:200]
+    test_input, test_target = initialize_seq(test, SEQ_LENGTH, STEP_SIZE)
+    for i in range(0, len(test) - SEQ_LENGTH, STEP_SIZE):
+        assert(test[i: i + SEQ_LENGTH] == decode(test_input[i: i + SEQ_LENGTH]))
+        assert(test[i + SEQ_LENGTH] == ix_to_char[test_target[i]])"""
 
 
-def test_index_from_hot():
-    char = 'n'
-    ix = torch.tensor(char_to_ix[char])
-    enc = one_hot(ix)
-    assert(char == ix_to_char[index_from_hot(enc).item()])
+class DemandDataset(Dataset):
+    def __init__(self, X_train, y_train):
+        self.X_train = X_train
+        self.y_train = y_train
+
+    def __len__(self):
+        return len(self.y_train)
+
+    def __getitem__(self, idx):
+        data = self.X_train[idx]
+        labels = self.y_train[idx]
+        return data, labels
 
 
-# initialize inputs and targets for train and validation
-Xtr, Ytr = initialize_seq()     # training set
-Xev, Yev = initialize_seq(train=False)      # validation set
-# print(f'Xtr: {Xtr.size()}, Ytr: {Ytr.size()},\nXev: {Xev.size()}, Yev:{Yev.size()}')
+tr_inputs, tr_targets = initialize_seq(fulltext, SEQ_LENGTH, STEP_SIZE)
+ev_inputs, ev_targets = initialize_seq(fulltext, SEQ_LENGTH, STEP_SIZE, train=False)
+tr_dataset = DemandDataset(torch.tensor(tr_inputs).to(device), torch.tensor(tr_targets).to(device))
+ev_dataset = DemandDataset(torch.tensor(ev_inputs).to(device), torch.tensor(ev_targets).to(device))
+tr_dataloader = DataLoader(tr_dataset, shuffle=True, batch_size=BATCH_SIZE)
+ev_dataloader = DataLoader(ev_dataset, shuffle=True, batch_size=BATCH_SIZE)
+n_train = len(tr_dataloader)
+n_eval = len(ev_dataloader)
 
 
 class RNN(nn.Module):
-    def __init__(self, embedding_dim, hidden_size, num_layers):
+    def __init__(self, input_size, output_size, embedding_dim, hidden_size, num_layers):
         super(RNN, self).__init__()
         self.embedding = nn.Embedding(input_size, embedding_dim)   # each char of seq is embedded
         self.layer_norm = nn.LayerNorm(embedding_dim)
@@ -193,322 +127,307 @@ class RNN(nn.Module):
         self.fc = nn.Linear(hidden_size, output_size)  # linear layer. Change it to nonlinear
 
     def forward(self, x):
-        # x.size(0) == batch_size
-        # h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(device) # not needed, it's by default
-
-        # input shape: (N, L, Hin) or (L, Hin) for unbatched input
         x_emb = self.embedding(x)
-        x_emb = self.layer_norm(x_emb)
+        # x_emb = self.layer_norm(x_emb)
         out, hidden_state = self.rnn(x_emb)
-        # out is (batch_size, seq_length, hidden_size) or (seq_length, hidden_size) for unbatched
 
-        # out: (N, L, Hout). But we don't need all the chars of the sequence, just the last one
         if x.size(0) > 1:
-            out = out[:, -1, :]     # select last char: from (N, L, Hout) --> output dim: (N, Hout)
+            out = out[:, -1, :]
 
-        out = self.fc(out)      # logits
+        out = self.fc(out)
         return out, hidden_state
 
     def sample(self, seed):     # seed can either be a char or a sequence
         self.eval()
         with torch.no_grad():
-            """if len(seed) <= 1:  # if seed is a single char
-                seed = one_hot(torch.tensor(char_to_ix[seed]))
-                seed = torch.unsqueeze(seed, 0)  # add dummy dimension for matching size
-            else:
-                seed = one_hot(torch.tensor(encode(seed)))
-            # last_state = last_state[:, -1, :]  # squeeze hidden"""
             seed = self.embedding(torch.tensor(encode(seed)))
-            seed = self.layer_norm(seed)
             output, _ = self.rnn(seed)
             output = output[-1, :]   # select last char probabilities
             logits = self.fc(output)
             prob = F.softmax(logits, dim=0)
-            # sample_ix = prob.argmax().item()
-            # print(f'output[-1, :] = {output}')
-            # print(f'prob = {prob}')
             sample_ix = torch.multinomial(prob, 1, replacement=True).item()
-            # print(f'maximum probability character following char {char_from_hot(seed[-1])} is {ix_to_char[sample_ix]}')
-            # print(f'prob size: {prob.size()}')
-            # print(f'sample_ix: {sample_ix}')
+            return ix_to_char[sample_ix]
+
+    def accuracy(self, input_seqs, targets):    # probably not needed
+        accuracy = 0
+        num_seqs = len(input_seqs)
+        for i in range(num_seqs):
+            predicted_char = self.sample(decode(input_seqs[i]))
+            actual_char = ix_to_char[targets[i]]
+            if actual_char == predicted_char:
+                accuracy += 1.0/float(num_seqs)
+        return accuracy
+
+
+def test_sample():
+    return 'test sample'
+
+
+def test_accuracy():
+    return 'test accuracy'
+
+
+class LSTM(nn.Module):
+    def __init__(self, input_size, output_size, embedding_dim, hidden_size, num_layers):
+        super(LSTM, self).__init__()
+        self.embedding = nn.Embedding(input_size, embedding_dim)   # each char of seq is embedded
+        self.layer_norm = nn.LayerNorm(embedding_dim)
+        self.num_layers = num_layers
+        self.hidden_size = hidden_size
+        self.lstm = nn.LSTM(embedding_dim, hidden_size, num_layers, batch_first=True)
+        # if batch_first = True : x has to be (batch_size, seq_length, input_size)
+        self.fc = nn.Linear(hidden_size, output_size)  # linear layer
+
+    def forward(self, x):
+        x_emb = self.embedding(x)
+        x_emb = self.layer_norm(x_emb)
+        out, hidden_state = self.lstm(x_emb)
+        if x.size(0) > 1:
+            out = out[:, -1, :]
+
+        out = self.fc(out)
+        return out, hidden_state
+
+    def sample(self, seed):     # seed can either be a char or a sequence
+        self.eval()
+        with torch.no_grad():
+            seed = self.embedding(torch.tensor(encode(seed)))
+            output, _ = self.lstm(seed)
+            output = output[-1, :]
+            logits = self.fc(output)
+            prob = F.softmax(logits, dim=0)
+            sample_ix = torch.multinomial(prob, 1, replacement=True).item()
             return ix_to_char[sample_ix]
 
     def accuracy(self, input_seqs, targets):
         accuracy = 0
         num_seqs = len(input_seqs)
         for i in range(num_seqs):
-            predicted_char = self.sample(input_seqs[i])
-            actual_char = targets[i]
+            predicted_char = self.sample(decode(input_seqs[i]))
+            actual_char = ix_to_char[targets[i]]
             if actual_char == predicted_char:
                 accuracy += 1.0/float(num_seqs)
         return accuracy
 
-class LSTM(nn.Module):
-    def __init__(self, embedding_dim, hidden_size, num_layers):
-        super(LSTM, self).__init__()
+
+class GRU(nn.Module):
+    def __init__(self, input_size, output_size, embedding_dim,  hidden_size, num_layers):
+        super(GRU, self).__init__()
         self.embedding = nn.Embedding(input_size, embedding_dim)   # each char of seq is embedded
         self.layer_norm = nn.LayerNorm(embedding_dim)
         self.num_layers = num_layers
         self.hidden_size = hidden_size
-        self.lstm = nn.LSTM(embedding_dim, hidden_size, num_layers, batch_first=True, dropout=0.2)
+        self.gru = nn.GRU(embedding_dim, hidden_size, num_layers, batch_first=True)
         # if batch_first = True : x has to be (batch_size, seq_length, input_size)
         self.fc = nn.Linear(hidden_size, output_size)  # linear layer
 
     def forward(self, x):
-
-        # input shape: (N, L, Hin) or (L, Hin) for unbatched input
         x_emb = self.embedding(x)
         x_emb = self.layer_norm(x_emb)
-        out, hidden_state = self.lstm(x_emb)
-        # out is (batch_size, seq_length, hidden_size) or (seq_length, hidden_size) for unbatched
-
-        # out: (N, L, Hout). But we don't need all the chars of the sequence, just the last one
+        out, hidden_state = self.gru(x_emb)
         if x.size(0) > 1:
-            out = out[:, -1, :]     # select last char: from (N, L, Hout) --> output dim: (N, Hout)
+            out = out[:, -1, :]
 
-        out = self.fc(out)      # logits
+        out = self.fc(out)
         return out, hidden_state
 
     def sample(self, seed):     # seed can either be a char or a sequence
         self.eval()
         with torch.no_grad():
-            """if len(seed) <= 1:  # if seed is a single char
-                seed = one_hot(torch.tensor(char_to_ix[seed]))
-                seed = torch.unsqueeze(seed, 0)  # add dummy dimension for matching size
-            else:
-                seed = one_hot(torch.tensor(encode(seed)))
-            # last_state = last_state[:, -1, :]  # squeeze hidden"""
             seed = self.embedding(torch.tensor(encode(seed)))
-            seed = self.layer_norm(seed)
-            output, _ = self.lstm(seed)
-            output = output[-1, :]   # select last char probabilities
+            output, _ = self.gru(seed)
+            output = output[-1, :]
             logits = self.fc(output)
             prob = F.softmax(logits, dim=0)
-            # sample_ix = prob.argmax().item()
-            # print(f'output[-1, :] = {output}')
-            # print(f'prob = {prob}')
             sample_ix = torch.multinomial(prob, 1, replacement=True).item()
-            # print(f'maximum probability character following char {char_from_hot(seed[-1])} is {ix_to_char[sample_ix]}')
-            # print(f'prob size: {prob.size()}')
-            # print(f'sample_ix: {sample_ix}')
             return ix_to_char[sample_ix]
 
+    def accuracy(self, input_seqs, targets):
+        accuracy = 0
+        num_seqs = len(input_seqs)
+        for i in range(num_seqs):
+            predicted_char = self.sample(decode(input_seqs[i]))
+            actual_char = ix_to_char[targets[i]]
+            if actual_char == predicted_char:
+                accuracy += 1.0/float(num_seqs)
+        return accuracy
 
-# model
+
 if model_choice == 'RNN':
-    model = RNN(embedding_dim, hidden_size, num_layers).to(device)
+    model = RNN(INPUT_SIZE, OUTPUT_SIZE, EMBEDDING_DIM, HIDDEN_SIZE, NUM_LAYERS).to(device)
 if model_choice == 'LSTM':
-    model = LSTM(embedding_dim, hidden_size, num_layers).to(device)
+    model = LSTM(INPUT_SIZE, OUTPUT_SIZE, EMBEDDING_DIM, HIDDEN_SIZE, NUM_LAYERS).to(device)
+if model_choice == 'GRU':
+    model = GRU(INPUT_SIZE, OUTPUT_SIZE, EMBEDDING_DIM, HIDDEN_SIZE, NUM_LAYERS).to(device)
+
+if TRAIN == 'generate':
+    file_to_load = f'{model_choice}.pth'
+    model.load_state_dict(torch.load(file_to_load))
+    model.eval()    # models are saved in train mode
 
 
-# test embedding
-def test_embedding():
-    test_seq = Xtr[0][0]
-    test_emb = model.embedding(test_seq)
-    print(f'embedding of test sequence: {test_emb}\nwith size {test_emb.size()}')   # ok
-    # try to embed single char
-    test_char = 'n'
-    char_emb = model.embedding(torch.tensor(char_to_ix[test_char], dtype=torch.long))
-    print(f'embedding of single char: {char_emb}\nwith size {char_emb.size()}')     # ok
+def similarity(sample, true_seq, distance_type):
+    seq_len = len(sample)
+    sample = encode(sample)     # distance expects arrays, not strings
+    true_seq = encode(true_seq)
+    if distance_type == 'hamming':
+        d = round(distance.hamming(sample, true_seq) * seq_len)
+    if distance_type == 'cosine':
+        d = distance.cosine(sample, true_seq)
+    return d
+
+
+def test_similarity(system):
+    seed_seq = 'nel mezzo del cammin di nostra vita'
+    sample_seq = [c for c in seed_seq]
+    sample_len = 50
+    for step in range(sample_len):
+        prediction = system.sample(sample_seq)
+        sample_seq.append(prediction)
+
+    seq1 = sample_seq
+    seq2 = fulltext[:len(sample_seq)]
+    seq1_enc = encode(seq1)
+    seq2_enc = encode(seq2)
+    assert(len(seq1_enc) == len(seq2_enc))
+
+    d0_ham = distance.hamming(seq1_enc, seq1_enc)
+    d0_cos = distance.cosine(seq1_enc, seq1_enc)
+
+    assert(d0_ham < 0.0001)
+    assert(d0_cos < 0.0001)
+
+    d1 = round(distance.hamming(seq1_enc, seq2_enc) * len(seq1_enc))
+    d2 = distance.cosine(seq1_enc, seq2_enc)
+
+    return d1, d2
 
 
 # Loss and optimizer
 criterion = nn.CrossEntropyLoss()
-optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
+optimizer = torch.optim.SGD(model.parameters(), lr=LEARNING_RATE)
 # implementing lr decay through epochs :
-scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=2, gamma=decay_rate)
+scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=DECAY_STEP, gamma=DECAY_RATE)
 
-"""# is the model working all right?
-# i.e. is the output actually logits? (log of probabilities of the characters)
-# take a letter as a seed:
-test_char = 's'
-char_hot = one_hot(torch.tensor(char_to_ix[test_char]))
-x_test = torch.unsqueeze(char_hot, 0)
-# print(f'encoded character tensor is {x_test} and is shaped as {x_test.size()}')
-logit, h = model.forward(x_test)
-# print(f'logits: {logit}\nlogits shape: {logit.size()}')
-prob = F.softmax(logit, dim=1)
-# print(f'probabilities:{prob} are summed to {torch.sum(prob)}')
-char_ixs = range(vocab_size)
-probabilities = [0]*vocab_size
-for i in range(vocab_size):
-    probabilities[i] = prob[0][i].item()
-# print(f'{probabilities}, char_ixs: {char_ixs}')"""
-
-
-# training
-n_iter = 10000
 current_loss_tr = 0
 current_loss_ev = 0
+tr_step = 0
+ev_step = 0
 tr_losses = []
 ev_losses = []
-plot_steps = n_iter / 50
-sample_steps = n_iter / 50
 
-tr_batches = Xtr.size(0)
-ev_batches = Xev.size(0)
+epoch_tr_loss = 0
+epoch_ev_loss = 0
+epoch_tr_losses = []
+epoch_ev_losses = []
 
 print('starting training and evaluation...')
-for epoch in range(num_epochs):
-    for i in range(n_iter):
+for epoch in range(NUM_EPOCHS):
+    print(f'epoch [{epoch}/{NUM_EPOCHS}]')
+    for X, y in tr_dataloader:
         # training
-        # select random batch:
-        b_tr = random.randint(0, tr_batches - 1)
-        b_ev = random.randint(0, ev_batches - 1)
-
-        Xb = Xtr[b_tr]
-        Yb = Ytr[b_tr]
-
-        # forward pass
         model.train()
-        outputs, h_n = model(Xb)
-        tr_loss = criterion(outputs, Yb)
+
+        # tr_step += 1
+        # forward pass
+        outputs, h_n = model(X)
+        tr_loss = criterion(outputs, y)
 
         # backward and optimize
         optimizer.zero_grad()
         tr_loss.backward()
         optimizer.step()
 
-        current_loss_tr += tr_loss.item()
+        # current_loss_tr += tr_loss.item()
+        epoch_tr_loss += tr_loss.item() / float(n_train)
 
+        # if (tr_step + 1) % plot_steps == 0:
+        #    tr_losses.append(current_loss_tr / plot_steps)
+        # current_loss_tr = 0
+    # tr_step = 0
+    epoch_tr_losses.append(epoch_tr_loss)
+    epoch_tr_loss = 0
+
+    for X, y in ev_dataloader:
         # evaluation
         model.eval()
+
+        # ev_step += 1
         with torch.no_grad():
             # evaluate loss on eval set
-            Xevb = Xev[b_ev]
-            Yevb = Yev[b_ev]
-            out, _ = model(Xevb)
-            ev_loss = criterion(out, Yevb)
-            current_loss_ev += ev_loss.item()
+            out, _ = model(X)
+            ev_loss = criterion(out, y)
 
-        if (i + 1) % plot_steps == 0:
-            print(f'Epoch [{epoch + 1}/{num_epochs}], Step [{i + 1}/{n_iter}], train Loss: {tr_loss.item():.4f}, eval '
-                  f'Loss: {ev_loss.item():.4f}')
+            # current_loss_ev += ev_loss.item()
+            epoch_ev_loss += ev_loss.item() / float(n_eval)
 
-            tr_losses.append(current_loss_tr / plot_steps)
-            ev_losses.append(current_loss_ev / plot_steps)
-            current_loss_tr = 0
-            current_loss_ev = 0
+            # if (ev_step + 1) % 3 == 0:
+            #     ev_losses.append(current_loss_ev / 3)
+            # current_loss_ev = 0
+    # ev_step = 0
+    epoch_ev_losses.append(epoch_ev_loss)
+    epoch_ev_loss = 0
 
     scheduler.step()    # lr = lr*0.1
 
-    plt.figure()
-    plt.plot(tr_losses, color='blue', label='training loss')
-    plt.plot(ev_losses, color='orange', label='evaluation loss')
-    plt.title(f'Training loss vs evaluation loss, epoch {epoch}')
-    plt.xlabel('iterations')
-    plt.ylabel('loss')
-    plt.legend()
-    plt.show()
+    print(f'avg epoch #{epoch} train loss: {epoch_tr_losses[epoch]}\navg epoch #{epoch} validation loss: {epoch_ev_losses[epoch]}')
 
+    tr_losses = []
+    ev_losses = []
 
-
-
-"""new_logit, hidden = model.forward(x_test)
-new_prob = F.softmax(new_logit, dim=1)
-char_ixs = range(vocab_size)
-new_probabilities = [0]*vocab_size
-for i in range(vocab_size):
-    new_probabilities[i] = new_prob[0][i].item()
-
-fig, axis = plt.subplots(1, 2)
-fig.tight_layout()
-axis[0].set_xlabel('character indexes')
-axis[1].set_xlabel('character indexes')
-axis[0].set_ylabel(f'probabilities for each character to follow {test_char} before training')
-axis[1].set_ylabel(f'probabilities for each character to follow {test_char} after training')
-axis[0].bar(char_ixs, probabilities, color='blue')
-axis[1].bar(char_ixs, new_probabilities, color='green')
+plt.figure()
+plt.plot(epoch_tr_losses, color='blue', label='training loss')
+plt.plot(epoch_ev_losses, color='orange', label='evaluation loss')
+plt.title(f'Training loss vs evaluation loss over {NUM_EPOCHS} epochs')
+plt.xlabel('epochs')
+plt.ylabel('loss')
+plt.legend()
 plt.show()
 
-# now, is sampling all right?
-# sample through a multinomial with softmax
-test_hist = [0]*vocab_size
-for i in range(100):
-    sample_ix = torch.multinomial(new_prob, 1, replacement=True).item()
-    # print(f'sampled index from true distribution of {test_char} is: {ix_to_char[sample_ix]}')
-    test_hist[sample_ix] += 1"""
-
-# how about sampling with a given hidden state and not with all zeros?
 seed_seq = 'nel mezzo del cammin di nostra vita'
 sample_seq = [c for c in seed_seq]
-sample_len = 120
-for k in range(sample_len):
-    # print(f'seed sequence: {sample_seq}')
+sample_len = 250
+for step in range(sample_len):
     prediction = model.sample(sample_seq)
-    # print(f'predicted char: {prediction}')
     sample_seq.append(prediction)
-txt = ''.join(sample_seq)
-print(f'sampled text: {txt}')
+sampled_txt = ''.join(sample_seq)
+print(f'sampled text: {sampled_txt}')
 
-inputs = []     # input sequences
-targets = []    # target characters for each input seq
-text = fulltext[K:]
-text_len = len(text)
-for i in range(0, text_len - seq_length, step_size):
-    inputs.append(text[i: i+seq_length])
-    targets.append(text[i + seq_length])
-print(f'{model_choice} accuracy = {model.accuracy(inputs, targets)*100}%')
+true_text = fulltext[:len(sample_seq)]
 
-"""# print(f'{h_n}\n{h_n.size()}')
-memory_out, state = model.rnn(x_test, h_n)    # hn last hidden state from training
-memory_logits = model.fc(memory_out)
-memory_prob = F.softmax(memory_logits, dim=1)
+hamming_d = similarity(sampled_txt, true_text, 'hamming')
+cosine_d = similarity(sampled_txt, true_text, 'cosine')
 
-memory_hist = [0]*vocab_size
-for i in range(100):
-    sample_ix = torch.multinomial(new_prob, 1, replacement=True).item()
-    # print(f'sampled index from true distribution of {test_char} is: {ix_to_char[sample_ix]}')
-    memory_hist[sample_ix] += 1
+print(f'computing distances between sampled string and real string:\nhamming distance = {hamming_d}\ncosine '
+      f'similarity = {cosine_d}')
 
-subtraction = [0]*vocab_size    # difference in occurences between memory and no memory
-for i in range(vocab_size):
-    subtraction[i] = abs(memory_hist[i] - test_hist[i])
-
-fig1, axis1 = plt.subplots(1, 4, sharey=True)
-fig1.tight_layout()
-axis1[0].set_xlabel('character indexes')
-axis1[1].set_xlabel('character indexes')
-axis1[2].set_xlabel('character indexes')
-axis1[3].set_xlabel('character indexes')
-axis1[0].set_ylabel(f'occurences of sampled characters following {test_char} without memory')
-axis1[1].set_ylabel(f'occurences of sampled characters following {test_char} with memory')
-axis1[2].set_ylabel(f'difference between sampling with memory and without memory')
-axis1[3].set_ylabel(f'probabilities for each character to follow {test_char} after training')
-axis1[0].bar(char_ixs, test_hist, color='red')
-axis1[1].bar(char_ixs, memory_hist, color='green')
-axis1[2].bar(char_ixs, subtraction, color='blue')
-axis1[3].bar(char_ixs, new_probabilities, color='orange', sharey=False)
-plt.show()"""
-
-# very small difference, doesn't change much between memory and no memory
+# print(f'accuracy = {model.accuracy(ev_inputs, ev_targets)*100}%')
 
 end = time.time()
 elapsed_time = end - start
 
-print(f'elapsed time in process: {int(elapsed_time/60)} minutes.\n****list of hyperparameters '
-      f'used:****\nembedding_dim = {embedding_dim},\nseq_length = {seq_length},\nstep_size =  {step_size},'
-      f'\nhidden_size = {hidden_size}, \nbatch_size = {batch_size},\nnum_layers = {num_layers},\nnum_epochs = '
-      f'{num_epochs},\nlearning rate = {learning_rate},\nlr decay factor={decay_rate}')
+print(f'elapsed time in process: {int(elapsed_time/60)} minutes.\n***** list of hyperparameters '
+      f'used: *****\nembedding_dim = {EMBEDDING_DIM},\nseq_length = {SEQ_LENGTH},\nstep_size =  {STEP_SIZE},'
+      f'\nhidden_size = {HIDDEN_SIZE}, \nbatch_size = {BATCH_SIZE},\nnum_layers = {NUM_LAYERS},\nnum_epochs = '
+      f'{NUM_EPOCHS},\nlearning rate = {LEARNING_RATE},\nlr decay factor={DECAY_RATE}\nlr decay step={DECAY_STEP}')
 
-# what I need to do now:
-# evaluate the efficiency of the model, like sample from a given sequence and see how many times the characters match
-# with the actual targets. make a function for that
 
-# also add learning rate decay THROUGH EPOCHS
-# and last save the best model out of different hyperparameters.
-# PS What is the best model? not only the one with low training loss, but also with
-# low eval loss... So I have to do a for in which I save the best but with the condition that tr_loss and ev_loss
-# shouldn't be too far apart. Actually not this, but the condition that eval_loss remains constant or
-# decreases!! That's a sign of overfitting.
+print('do you want to save your model? Type yes or no')
+CHOICE = input()
+while CHOICE != 'yes' and CHOICE != 'no':
+    print('this key is not existing, type yes or no to choose whether to save the model or not')
+    CHOICE = input()
 
-# saving the model
-# FILE = "RNN.pth"
-# torch.save(RNN_model, FILE)    # this is saved in train mode. to use it, put it back to eval with .eval()
-# when you re-create the model, do the following:
-# (i) set up model: for example, model=RNN(...)
-# (ii) load the saved parameters: model.load_state_dict(torch.load(FILE))
-# (iii) send it to GPU: model.to(device)
+if CHOICE == 'yes':
+    # saving the model
+    FILE = f'{model_choice}.pth'
+    torch.save(model, FILE)    # this is saved in train mode. to use it, put it back to eval with .eval()
+
+    # when you re-create the model, do the following:
+    # (i) set up model: for example, model=RNN(...)
+    # (ii) load the saved parameters: model.load_state_dict(torch.load(FILE))
+    # (iii) send it to GPU: model.to(device)"""
+
 
 
 
