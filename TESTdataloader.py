@@ -5,13 +5,18 @@ from torch.utils.data import Dataset, DataLoader
 import matplotlib.pyplot as plt
 import time
 from scipy.spatial import distance
+import sys
+from sys import argv
 import configparser
 
-config = configparser.ConfigParser()
-config.read('configuration.txt')
 start = time.time()
 
-# https://pytorch.org/docs/stable/generated/torch.nn.RNN.html
+print('please, insert the configuration file name in order to get the hyperparameters. If you want to use default hyperparameters, type: default')
+config = configparser.ConfigParser()
+config_filename = input()
+#config_filename = config.read(sys.argv[1])
+if config_filename == 'default':
+    config.read('configuration.txt')
 
 # Device config
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -28,7 +33,16 @@ ix_to_char = {i: ch for i, ch in enumerate(chars)}
 encode = lambda s: [char_to_ix[c] for c in s]  # encoder : take a string , output a list of integers
 decode = lambda l: ''.join([ix_to_char[i] for i in l])  # decoder : take a list of integers, output a string
 
-model_choice = 'LSTM'
+print('please, insert the RNN model you want to use. Choices are between: RNN, LSTM, GRU')
+model_choice = input()
+# model_choice = config.read(sys.argv[1])
+if model_choice != 'GRU' and model_choice != 'LSTM' and model_choice != 'RNN':
+    raise ValueError(f'model {model_choice} does not exist. Please insert one between RNN, LSTM, GRU')
+
+print('All right! Now, type train if you want to train the model, type generate if you just want to generate text')
+TRAIN = input()
+if TRAIN != 'train' and TRAIN != 'generate':
+    raise ValueError(f'model {model_choice} is an invalid keyword. Choose between train or generate.')
 
 # hyperparameters
 SEQ_LENGTH = int(config.get('Hyperparameters', 'SEQ_LENGTH'))
@@ -38,7 +52,7 @@ HIDDEN_SIZE = int(config.get('Hyperparameters', 'HIDDEN_SIZE'))
 BATCH_SIZE = int(config.get('Hyperparameters', 'BATCH_SIZE'))
 NUM_LAYERS = int(config.get('Hyperparameters', 'NUM_LAYERS'))
 NUM_EPOCHS = int(config.get('Hyperparameters', 'NUM_EPOCHS'))
-LEARNING_RATE = float(config.get('Hyperparameters', 'LEARNING_RATE'))   # 0.1 works alright for RNN until epoch 12, 0.5 seems to work better for LSTM until epoch 25
+LEARNING_RATE = float(config.get('Hyperparameters', 'LEARNING_RATE'))   # 0.1 works alright for RNN until epoch 12, 0.5 seems to work better for LSTM until epoch 25. 0.5 works for gru until 10
 DECAY_RATE = float(config.get('Hyperparameters', 'DECAY_RATE'))
 DECAY_STEP = int(config.get('Hyperparameters', 'DECAY_STEP'))
 
@@ -52,7 +66,7 @@ OUTPUT_SIZE = vocab_size
 
 def initialize_seq(corpus, seq_length, step_size, train=True):
     encoded_text = encode(corpus)
-    k = int(0.8 * fulltext_len)
+    k = int(0.8 * len(corpus))
     if train:
         text = encoded_text[:k]     # train, 80%
     else:
@@ -70,7 +84,14 @@ def initialize_seq(corpus, seq_length, step_size, train=True):
 
 
 def test_initialize_seq():
-    return 'test'
+    test = fulltext[:200]
+    test_input, test_target = initialize_seq(test, SEQ_LENGTH, STEP_SIZE)
+    for i in range(0, len(test) - SEQ_LENGTH, STEP_SIZE):
+        assert(test[i: i + SEQ_LENGTH] == test_input[i: i + SEQ_LENGTH])
+        assert(test[i + SEQ_LENGTH] == test_target[i])
+
+
+test_initialize_seq()
 
 
 class DemandDataset(Dataset):
@@ -234,12 +255,17 @@ class GRU(nn.Module):
                 accuracy += 1.0/float(num_seqs)
         return accuracy
 
+
 if model_choice == 'RNN':
     model = RNN(INPUT_SIZE, OUTPUT_SIZE, EMBEDDING_DIM, HIDDEN_SIZE, NUM_LAYERS).to(device)
 if model_choice == 'LSTM':
     model = LSTM(INPUT_SIZE, OUTPUT_SIZE, EMBEDDING_DIM, HIDDEN_SIZE, NUM_LAYERS).to(device)
 if model_choice == 'GRU':
     model = GRU(INPUT_SIZE, OUTPUT_SIZE, EMBEDDING_DIM, HIDDEN_SIZE, NUM_LAYERS).to(device)
+
+if TRAIN == 'generate':
+    file_to_load = f'{model_choice}.pth'
+    model.load_state_dict(torch.load(file_to_load))
 
 
 def similarity(sample, true_seq, distance_type):
@@ -278,8 +304,6 @@ def test_similarity(system):
 
     return d1, d2
 
-# print(f'hamming distance, cosine distance: {test_similarity(model)}')
-
 
 # Loss and optimizer
 criterion = nn.CrossEntropyLoss()
@@ -299,7 +323,7 @@ epoch_ev_loss = 0
 epoch_tr_losses = []
 epoch_ev_losses = []
 
-"""print('starting training and evaluation...')
+print('starting training and evaluation...')
 for epoch in range(NUM_EPOCHS):
     print(f'epoch [{epoch}/{NUM_EPOCHS}]')
     for X, y in tr_dataloader:
@@ -373,8 +397,8 @@ print(f'sampled text: {sampled_txt}')
 
 true_text = fulltext[:len(sample_seq)]
 
-hamming_d = distance(sampled_txt, true_text, 'hamming')
-cosine_d = distance(sampled_txt, true_text, 'cosine')
+hamming_d = similarity(sampled_txt, true_text, 'hamming')
+cosine_d = similarity(sampled_txt, true_text, 'cosine')
 
 print(f'computing distances between sampled string and real string:\nhamming distance = {hamming_d}\ncosine '
       f'similarity = {cosine_d}')
