@@ -1,5 +1,5 @@
 # RNN Implementation in PyTorch
-## Comparing Efficiency: LSTM vs GRU
+## Comparing Efficiency: RNN vs LSTM vs GRU
 ### Generating Text based on Dante's Divina Commedia
 This repository contains the implementation of a Recurrent Neural Network (RNN) using PyTorch. The main goal of this project is to compare the efficiency of different RNN variants, namely LSTM (Long Short-Term Memory) and GRU (Gated Recurrent Unit), in generating text based on Dante's Divina Commedia.
 
