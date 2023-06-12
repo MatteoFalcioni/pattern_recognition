@@ -57,6 +57,7 @@ You can use this program in two ways:
 
 Once you have chosen your goal, in order to start the program you have to do the following steps;
 - First, you can either use the default hyperparameters the model contained in the file [configuration](configuration.txt) by typing 'default' in the command line, or eventually choose your own creating a new configuration file in the syntax of [configuration](configuration.txt). If you choose to do so, you have to specify the path to the new configuration file in the command line. 
-- Second, 
-
+- Second, you can choose the model you want to use. Choice is between RNN, LSTM or GRU
+- Third, you must choose if you want to train your model or use a pretrained one to generate text. If you choose the first option, you must type 'train'
+as input, otherwise you should type 'generate'. 
 
