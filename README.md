@@ -63,7 +63,7 @@ Once you have chosen your goal, in order to start the program you have to do the
 - Third, you will be asked if you want to train your model or use a [pretrained](pretrained) one to generate text. If you choose the first option, you must type 'train' in the command line, otherwise you should type 'generate'. During training, training loss and validation loss are printed at every epoch in order to check for overfitting. Such data are stored in the [toplot](toplot) file; 
 - Finally, you will be asked if you want to save the new learnt parameters and therefore overwrite the pretrained models' parameters in the [pretrained](pretrained) folder. If you are satisfied with the result (i.e. the values of the training loss and the validation loss) then you should save your model in order to use it again. 
 
-If you want to print out the stored data, you must launch the file plot.py. This will plot not only the losses saved in [toplot](toplot) but also the comparison between the efficiency of the three models, which is based on computing the hamming distance and the cosine similarity between the generated text, and by measuring the accuracy of the prediction on the validation set. 
+If you want to print out the stored data, you must launch the file plot.py. This will plot not only the losses saved in [toplot](toplot) but also the comparison between the efficiency of the three models (stored in the [efficiency](efficiency) file), which is based on computing the hamming distance and the cosine similarity between the generated text, and by measuring the accuracy of the prediction on the validation set. 
 
 ## Project Structure
 This is how the project has been divided into blocks: 
