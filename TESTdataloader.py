@@ -8,6 +8,7 @@ from scipy.spatial import distance
 import configparser
 
 config = configparser.ConfigParser()
+config.read('configuration.txt')
 start = time.time()
 
 # https://pytorch.org/docs/stable/generated/torch.nn.RNN.html
@@ -29,21 +30,21 @@ decode = lambda l: ''.join([ix_to_char[i] for i in l])  # decoder : take a list 
 
 model_choice = 'LSTM'
 
-# Hyper-parameters
-SEQ_LENGTH = 25
-STEP_SIZE = 3   # shift of sequences
+# hyperparameters
+SEQ_LENGTH = int(config.get('Hyperparameters', 'SEQ_LENGTH'))
+STEP_SIZE = int(config.get('Hyperparameters', 'STEP_SIZE'))     # shift of sequences
+EMBEDDING_DIM = int(config.get('Hyperparameters', 'EMBEDDING_DIM'))
+HIDDEN_SIZE = int(config.get('Hyperparameters', 'HIDDEN_SIZE'))
+BATCH_SIZE = int(config.get('Hyperparameters', 'BATCH_SIZE'))
+NUM_LAYERS = int(config.get('Hyperparameters', 'NUM_LAYERS'))
+NUM_EPOCHS = int(config.get('Hyperparameters', 'NUM_EPOCHS'))
+LEARNING_RATE = float(config.get('Hyperparameters', 'LEARNING_RATE'))   # 0.1 works alright for RNN until epoch 12, 0.5 seems to work better for LSTM until epoch 25
+DECAY_RATE = float(config.get('Hyperparameters', 'DECAY_RATE'))
+DECAY_STEP = int(config.get('Hyperparameters', 'DECAY_STEP'))
 
 INPUT_SIZE = vocab_size
 OUTPUT_SIZE = vocab_size
-EMBEDDING_DIM = 100
-HIDDEN_SIZE = 100
-BATCH_SIZE = 128
-NUM_LAYERS = 5
 
-NUM_EPOCHS = 40
-LEARNING_RATE = 0.5     # 0.1 works alright for RNN until epoch 12, 0.5 seems to work better for LSTM until epoch 25
-DECAY_RATE = 0.1
-DECAY_STEP = 35
 
 # https://pytorch.org/docs/stable/generated/torch.nn.RNN.html
 # batch_size = N, seq_length = L, D=1 (directions), Hin = size of the input of the model, i.e. embedding_dim
