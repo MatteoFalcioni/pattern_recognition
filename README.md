@@ -4,10 +4,8 @@
 This repository contains the implementation of a Recurrent Neural Network (RNN) using PyTorch. The main goal of this project is to compare the efficiency of different RNN variants, namely LSTM (Long Short-Term Memory) and GRU (Gated Recurrent Unit), in generating text based on Dante's Divina Commedia.
 
 ## Table of Contents
-- [Introduction](#introduction)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Results](#results)
+- [Introduction](#Introduction)
+- [Project structure](#Project_structure)
 
 ## Introduction
 Recurrent Neural Networks (RNNs) are a class of neural networks that are well-suited for sequential data, such as text. They have the ability to retain information from previous steps and use it to make predictions or generate new sequences. In this project, we explore the effectiveness of RNNs by comparing two popular variants: LSTM and GRU.
@@ -24,9 +22,10 @@ past inputs. This process is called the ''unfolding `` of the RNN and is depicte
 
 The equations governing the RNN functioning can be summed up as:
 
-$$\mathbf{h}(t) = f (\mathbf{W}_{xh}\mathbf{x}(t) + \mathbf{W}_{hh}\mathbf{h}(t-1) + \mathbf{b})$$
+<img src="readme_img/RNN_eq.png" alt="" width="300">
+<img src="readme_img/RNN_eq2.png" alt="" width="180">
 
-$$\mathbf{y}(t) = g(\mathbf{W}_{hy} \mathbf{h}(t) + \mathbf{c})$$
+Where $W$ represent the weight matrices for the differrent units, $\mathbf{b}$ and $\mathbf{c}$ are bias terms, $f$ denotes the activation function applied element-wise to the input of the recurrent unit and $g$ is the activation function applied to the output layer.
 
 Unlickily, RNNs suffer from certain limitations (vanishing and exploding gradient issues) that can hinder their performance on tasks that involve long-term dependencies. These limitations motivated the developmentof more advanced architectures like Long Short-Term Memory (LSTM) network and Gated-Recurrent Units (GRU). 
 
@@ -34,17 +33,7 @@ A common LSTM unit is composed of a cell, an input gate, an output gate and a fo
 
 In the equations below, matrices $W_{\alpha \beta}$ contain the weights of the input and recurrent connections, where the subscripts $\alpha ,\beta$ will be referring to weights for transitions from gate $\alpha$ to gate $\beta$, which could be input gate $i$, output gate $o$, the forget gate $f$ or the memory cell $c$. In the same way, $b_{\alpha \beta}$ will refer to biases for the layers, and $\sigma_\alpha$ will be the activation functions of the gates.
 
-$$i_t = \sigma_i (W_{ii} x_t + b_{ii} + W_{hi} h_{t-1} + b_{hi})$$
-
-$$f_t = \sigma_f (W_{if} x_t + b_{if} + W_{hf} h_{t-1} + b_{hf})$$
-
-$$\Tilde{c}_t = \sigma_c (W_{ic} x_t + b_{ic} + W_{hc} h_{t-1} + b_{hc})$$
-
-$$o_t = \sigma_o (W_{io} x_t + b_{io} + W_{ho} h_{t-1} + b_{ho})$$
-
-$$c_t = f_t \odot c_{t-1} + i_t \odot \Tilde{c}_t$$
-
-$$h_t = o_t \odot \sigma_h (c_t)$$
+<img src="readme_img/LSTM_eqs.png" alt="" width="300">
 
 The initial values are $c_0=0$ and $h_0=0$ and the operator $\odot$ denotes the element-wise product. The subscript $t$ indexes the time step.
 Here is a sketch of the LSTM architecture:
@@ -53,21 +42,21 @@ Here is a sketch of the LSTM architecture:
 
 Finally, GRUs simplify the LSTM architecture by combining the forget and input gates into a single update gate. Additionally, they introduce a reset gate that determines how much of the previous hidden state should be forgotten. This simplification results in a more streamlined architecture with fewer parameters than LSTMs. The following are its equations: 
 
-$$r_t = \sigma_f (W_{ir} x_t + b_{ir} + W_{hr} h_{t-1} + b_{hr})$$
+<img src="readme_img//GRU_eqs.png" alt="" width="400">
 
-$$z_t = \sigma (W_{iz} x_t + b_{iz} + W_{hz} h_{t-1} + b_{hz})$$
+where $r_t, z_t, n_t$ are the reset, update, and new gates, respectively. $\sigma$ is the sigmoid function, and $\odot$ is the Hadamard product.
 
-$$n_t = \tanh (W_{in} x_t + b_{in} + r_t \odot (W_{hn} h_{t-1} + b_{hn})$$
+Here is a sketch of its architecture:
 
-$$h_t = (1 - z_t) \odot n_t + z_t \odot h_{t-1}$$
-
-
-and here is a sketch of its architecture:
 <img src="readme_img//GRU.png" alt="" width="400">
 
-**Installation**
-1. Clone the repository:
+## Project structure
+You can use this program in two ways: 
+* you can use a pretrained model, contained in the [pretrained](pretrained) folder, by typing ... and use it to generate text in the style of Dante's Divina Commedia. 
+* or, you can train the model again by ...
 
-git clone https://github.com/yourusername/yourprojectname.git
+Once you have chosen your goal, in order to start the program you have to do the following steps;
+- First, you can either use the default hyperparameters the model contained in the file [configuration](configuration.txt) by typing 'default' in the command line, or eventually choose your own creating a new configuration file in the syntax of [configuration](configuration.txt). If you choose to do so, you have to specify the path to the new configuration file in the command line. 
+- Second, 
 
 
