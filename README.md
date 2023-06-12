@@ -27,6 +27,8 @@ The equations governing the RNN functioning can be summed up as:
 <img src="readme_img/RNN_eq.png" alt="" width="300">
 <img src="readme_img/RNN_eq2.png" alt="" width="180">
 
+Where $\mathbf{W}_{xh}$ represents the weight matrix for the input, $\mathbf{W}_{hh}$ represents the weight matrix for the recurrent connection, $\mathbf{b}$ is a bias term, $f$ denotes the activation function applied element-wise to the input of the recurrent unit. $g$ is the activation function applied to the output layer, $\mathbf{W}_{hy}$ is the weight matrix for the output layer, and $\mathbf{c}$ is a bias term.
+
 Unlickily, RNNs suffer from certain limitations (vanishing and exploding gradient issues) that can hinder their performance on tasks that involve long-term dependencies. These limitations motivated the developmentof more advanced architectures like Long Short-Term Memory (LSTM) network and Gated-Recurrent Units (GRU). 
 
 A common LSTM unit is composed of a cell, an input gate, an output gate and a forget gate. The cell remembers values over arbitrary time intervals and the three gates regulate the flow of information into and out of the cell. Forget gates decide what information to discard from a previous state. Input gates decide which pieces of new information to store in the current state, using the same system as forget gates. Output gates control which pieces of information in the current state to output. 
