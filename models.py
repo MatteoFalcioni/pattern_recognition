@@ -78,7 +78,7 @@ class LSTM(RNN, nn.Module):
     """def forward(self, x):
         x_emb = self.embedding(x)
         x_emb = self.layer_norm(x_emb)
-        out, hidden_state = self.system(x_emb)
+        out, hidden_state = self.lstm(x_emb)
         if x.size(0) > 1:
             out = out[:, -1, :]
 

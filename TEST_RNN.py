@@ -49,19 +49,24 @@ while TRAIN != 'train' and TRAIN != 'generate':
     TRAIN = input()
 
 # hyperparameters
-SEQ_LENGTH = int(config.get('General_settings', 'SEQ_LENGTH'))
-STEP_SIZE = int(config.get('General_settings', 'STEP_SIZE'))
-EMBEDDING_DIM = int(config.get('General_settings', 'EMBEDDING_DIM'))
-HIDDEN_SIZE = int(config.get('General_settings', 'HIDDEN_SIZE'))
-BATCH_SIZE = int(config.get('General_settings', 'BATCH_SIZE'))
-NUM_LAYERS = int(config.get('General_settings', 'NUM_LAYERS'))
+SEQ_LENGTH = int(config.get('Hyperparameters', 'SEQ_LENGTH'))
+STEP_SIZE = int(config.get('Hyperparameters', 'STEP_SIZE'))
+EMBEDDING_DIM = int(config.get('Hyperparameters', 'EMBEDDING_DIM'))
+HIDDEN_SIZE = int(config.get('Hyperparameters', 'HIDDEN_SIZE'))
+BATCH_SIZE = int(config.get('Hyperparameters', 'BATCH_SIZE'))
+NUM_LAYERS = int(config.get('Hyperparameters', 'NUM_LAYERS'))
+DECAY_RATE = float(config.get('Hyperparameters', 'DECAY_RATE'))
+NUM_EPOCHS = int(config.get('Hyperparameters', 'NUM_EPOCHS'))
 
-DECAY_RATE = float(config.get('General_settings', 'DECAY_RATE'))
-
-# these are different between different models
-LEARNING_RATE = float(config.get(model_choice, 'LEARNING_RATE'))   # 0.1 works alright for RNN until epoch 12, 0.5 seems to work better for LSTM until epoch 25. 0.5 works for gru until 10
-NUM_EPOCHS = int(config.get(model_choice, 'NUM_EPOCHS'))
-DECAY_STEP = int(config.get(model_choice, 'DECAY_STEP'))
+if model_choice == 'RNN':
+    LEARNING_RATE = float(config.get('Hyperparameters', 'LEARNING_RATE_RNN'))   # 0.1 works alright for RNN until epoch 12, 0.5 seems to work better for LSTM until epoch 25. 0.5 works for gru until 10
+    DECAY_STEP = int(config.get('Hyperparameters', 'DECAY_STEP_RNN'))
+if model_choice == 'LSTM':
+    LEARNING_RATE = float(config.get('Hyperparameters', 'LEARNING_RATE_LSTM'))
+    DECAY_STEP = int(config.get('Hyperparameters', 'DECAY_STEP_LSTM'))
+if model_choice == 'GRU':
+    LEARNING_RATE = float(config.get('Hyperparameters', 'LEARNING_RATE_GRU'))
+    DECAY_STEP = int(config.get('Hyperparameters', 'DECAY_STEP_GRU'))
 
 INPUT_SIZE = vocab_size
 OUTPUT_SIZE = vocab_size
@@ -153,20 +158,16 @@ if TRAIN == 'generate':
     model.eval()    # models are saved in train mode
 
 
-def efficiency(sample, true_seq, distance_type, losses):
+def distances(sample, true_seq):
     seq_len = len(sample)
     sample = encode(sample)     # distance expects arrays, not strings
     true_seq = encode(true_seq)
     d1 = round(distance.hamming(sample, true_seq) * seq_len)
     d2 = distance.cosine(sample, true_seq)
-    total_characters = 0
-    for loss in losses:
-        total_characters += len(loss)
-    sum_losses = sum(losses)
     return d1, d2
 
 
-def test_efficiency(system):
+def test_distances(system):
     seed_seq = 'nel mezzo del cammin di nostra vita'
     sample_seq = [c for c in seed_seq]
     sample_len = 50
@@ -203,6 +204,7 @@ epoch_tr_loss = 0
 epoch_ev_loss = 0
 epoch_tr_losses = []
 epoch_ev_losses = []
+epoch_perplexities = []
 
 print('starting training and evaluation...')
 for epoch in range(NUM_EPOCHS):
@@ -222,10 +224,10 @@ for epoch in range(NUM_EPOCHS):
 
         epoch_tr_loss += tr_loss.item() / float(n_train)
 
-    # tr_step = 0
     epoch_tr_losses.append(epoch_tr_loss)
     epoch_tr_loss = 0
 
+    epoch_perplexity = 0
     for X, y in ev_dataloader:
         # evaluation
         model.eval()
@@ -236,12 +238,15 @@ for epoch in range(NUM_EPOCHS):
             ev_loss = criterion(out, y)
 
             epoch_ev_loss += ev_loss.item() / float(n_eval)
+            epoch_perplexity += math.exp(ev_loss.item())/float(n_eval)  # 'average' perplexity
 
     epoch_ev_losses.append(epoch_ev_loss)
     epoch_ev_loss = 0
+    epoch_perplexities.append(epoch_perplexity)
+    epoch_perplexity = 0
 
     # Check for overfitting
-    if epoch_ev_loss >= previous_val_loss:
+    if epoch_ev_loss >= previous_val_loss and epoch > 20:
         print("Overfitting detected! Stopping the training loop...")
         break
 
@@ -258,9 +263,9 @@ for epoch in range(NUM_EPOCHS):
 # write losses on separate file
 with open('toplot.txt', 'w') as file:
     # Zip the lists and iterate over the pairs
-    for tr_loss, ev_loss in zip(epoch_tr_losses, epoch_ev_losses):
+    for tr_loss, ev_loss, perplexity in zip(epoch_tr_losses, epoch_ev_losses, epoch_perplexities):
         # Write the values to the file with a space in between
-        file.write(f'{tr_loss}\t{ev_loss}\n')
+        file.write(f'{tr_loss}\t{ev_loss}\t{perplexity}\n')
 
 seed_seq = 'nel mezzo del cammin di nostra vita'
 sample_seq = [c for c in seed_seq]
@@ -273,7 +278,7 @@ print(f'sampled text: {sampled_txt}')
 
 true_text = fulltext[:len(sample_seq)]
 
-hamming_d, cosine_d = efficiency(sampled_txt, true_text, ev_losses)
+hamming_d, cosine_d = distances(sampled_txt, true_text)
 accuracy = model.accuracy(ev_inputs, ev_targets)*100
 with open('efficiency.txt', 'w') as file:
     file.write(f'{model_choice}\t{hamming_d}\t{cosine_d}\t{accuracy}')

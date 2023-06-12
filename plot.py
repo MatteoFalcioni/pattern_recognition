@@ -4,21 +4,24 @@ import numpy as np
 # Read the values from the file
 epoch_tr_losses = []
 epoch_ev_losses = []
+perplexities = []
 
 with open('toplot.txt', 'r') as file:
     for line in file:
-        tr_loss, ev_loss = line.strip().split()
+        tr_loss, ev_loss, perp = line.strip().split()
         epoch_tr_losses.append(float(tr_loss))
         epoch_ev_losses.append(float(ev_loss))
+        perplexities.append(float(perp))
 
 NUM_EPOCHS = len(epoch_tr_losses)
 
-plt.figure()
-plt.plot(epoch_tr_losses, color='blue', label='training loss')
-plt.plot(epoch_ev_losses, color='orange', label='evaluation loss')
-plt.title(f'Training loss vs evaluation loss over {NUM_EPOCHS} epochs')
-plt.xlabel('epochs')
-plt.ylabel('loss')
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
+ax1.plot(epoch_tr_losses, color='blue', label='training loss')
+ax1.plot(epoch_ev_losses, color='orange', label='validation loss')
+ax1.set_title(f'Training loss vs evaluation loss over {NUM_EPOCHS} epochs')
+ax2.set_title(f'Perplexity over {NUM_EPOCHS} epochs')
+ax2.plot(perplexities, color='red', label='perplexity')
+plt.subplots_adjust(wspace=0.3)
 plt.legend()
 plt.show()
 
