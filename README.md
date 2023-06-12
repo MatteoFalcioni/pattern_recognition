@@ -38,7 +38,7 @@ $$i_t = \sigma_i (W_{ii} x_t + b_{ii} + W_{hi} h_{t-1} + b_{hi})$$
 
 $$f_t = \sigma_f (W_{if} x_t + b_{if} + W_{hf} h_{t-1} + b_{hf})$$
 
-$$\Tilde{c}_t = \sigma_c (W_{ic} x_t + b_{ic} + W_{hc} h_{t-1} + b_{hc})$$
+$$ \Tilde{c}_t = \sigma_c (W_{ic} x_t + b_{ic} + W_{hc} h_{t-1} + b_{hc})$$
 
 $$o_t = \sigma_o (W_{io} x_t + b_{io} + W_{ho} h_{t-1} + b_{ho})$$
 
