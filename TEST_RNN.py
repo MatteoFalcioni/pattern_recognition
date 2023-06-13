@@ -58,15 +58,21 @@ NUM_LAYERS = int(config.get('Hyperparameters', 'NUM_LAYERS'))
 DECAY_RATE = float(config.get('Hyperparameters', 'DECAY_RATE'))
 NUM_EPOCHS = int(config.get('Hyperparameters', 'NUM_EPOCHS'))
 
+
+# lr choice: 0.1 works alright for RNN until epoch 12, 0.5 seems to work better for LSTM
+# until epoch 25. 0.5 works for gru until 10
 if model_choice == 'RNN':
-    LEARNING_RATE = float(config.get('Hyperparameters', 'LEARNING_RATE_RNN'))   # 0.1 works alright for RNN until epoch 12, 0.5 seems to work better for LSTM until epoch 25. 0.5 works for gru until 10
+    LEARNING_RATE = float(config.get('Hyperparameters', 'LEARNING_RATE_RNN'))
     DECAY_STEP = int(config.get('Hyperparameters', 'DECAY_STEP_RNN'))
+    MIN_EPOCHS = int(config.get('Hyperparameters', 'MIN_EPOCHS_RNN'))
 if model_choice == 'LSTM':
     LEARNING_RATE = float(config.get('Hyperparameters', 'LEARNING_RATE_LSTM'))
     DECAY_STEP = int(config.get('Hyperparameters', 'DECAY_STEP_LSTM'))
+    MIN_EPOCHS = int(config.get('Hyperparameters', 'MIN_EPOCHS_LSTM'))
 if model_choice == 'GRU':
     LEARNING_RATE = float(config.get('Hyperparameters', 'LEARNING_RATE_GRU'))
     DECAY_STEP = int(config.get('Hyperparameters', 'DECAY_STEP_GRU'))
+    MIN_EPOCHS = int(config.get('Hyperparameters', 'MIN_EPOCHS_GRU'))
 
 INPUT_SIZE = vocab_size
 OUTPUT_SIZE = vocab_size
@@ -202,8 +208,6 @@ epoch_tr_losses = []
 epoch_ev_losses = []
 epoch_perplexities = []
 
-min_epochs = 30
-
 if TRAIN == 'train':
     print('starting training and evaluation...')
     for epoch in range(NUM_EPOCHS):
@@ -245,7 +249,7 @@ if TRAIN == 'train':
         epoch_perplexity = 0
 
         # Check for overfitting
-        if epoch_ev_loss >= previous_val_loss and epoch > min_epochs:
+        if epoch_ev_loss >= previous_val_loss and epoch > MIN_EPOCHS:
             print("Overfitting detected! Stopping the training loop...")
             break
 
