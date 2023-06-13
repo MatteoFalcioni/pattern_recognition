@@ -4,7 +4,7 @@ import configparser
 
 import models
 import data_config
-from data_config import encode, char_to_ix, initialize_seq
+from data_config import encode, ix_to_char, char_to_ix, initialize_seq
 
 # Device config
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -30,27 +30,45 @@ INPUT_SIZE = vocab_size
 OUTPUT_SIZE = vocab_size
 fulltext = data_config.fulltext
 
-model = models.RNN(INPUT_SIZE, OUTPUT_SIZE, EMBEDDING_DIM, HIDDEN_SIZE, NUM_LAYERS).to(device)
+test = fulltext[:200]
+test_enc = encode(fulltext[:200])
 
 
 def test_initialize_seq():
-    test = fulltext[:200]
-    test_enc = encode(fulltext[:200])
-    test_input, test_target = initialize_seq(test, SEQ_LENGTH, STEP_SIZE)
+    """this function test the correct functioning of initialize_seq(),
+    by checking that the input sequences and the targets coincide with the text elements"""
+    test_input, test_target = initialize_seq(test, SEQ_LENGTH, 3)
+    print(len(test_input))
 
+    s = 0
     for i in range(0, len(test) - SEQ_LENGTH, STEP_SIZE):
-        for k in range(SEQ_LENGTH):
-            assert(test_enc[i: i + k] == test_input[i][i: i + k])
-        assert(test_enc[i + SEQ_LENGTH] == test_target[i])
+        if s < len(test_input):
+            for k in range(SEQ_LENGTH):
+                assert(test_enc[i+k] == test_input[s][k])
+            s += 1
+
+    i = 0
+    s = 0
+    while i < len(test_target) - SEQ_LENGTH:
+        assert (test_enc[i + SEQ_LENGTH] == test_target[s])
+        i += STEP_SIZE
+        if s < len(test_target):
+            s += 1
+        else:
+            break
 
 
-def test_sample(system):
+model = models.RNN(INPUT_SIZE, OUTPUT_SIZE, EMBEDDING_DIM, HIDDEN_SIZE, NUM_LAYERS).to(device)
+test_seq = 'nel mezzo del cammin di nostra vita'
+test_seed = model.embedding(torch.tensor(encode(test_seq)))
 
-    test_seq = 'nel mezzo del cammin di nostra vita'
-    test_seed = system.embedding(torch.tensor(encode(test_seq)))
-    output, _ = system.rnn(test_seed)
+
+def test_sample():
+    """ this function tests  the correct functioning of sample(),
+    by checking that for a big number of samples the sampled distribution tends to the real one"""
+    output, _ = model.system(test_seed)
     output = output[-1, :]  # select last char probabilities
-    logits = system.fc(output)
+    logits = model.fc(output)
     prob = F.softmax(logits, dim=0)
     probabilities = [0.0] * vocab_size
     for i in range(vocab_size):
@@ -58,7 +76,7 @@ def test_sample(system):
 
     test_samples = [0.0] * vocab_size
     subtraction = [0.0] * vocab_size
-    n_iter = 200000
+    n_iter = 300000
     for i in range(n_iter):
         test_prediction = model.sample(test_seq)
         test_samples[char_to_ix[test_prediction]] += 1.0/n_iter

@@ -18,7 +18,7 @@ class RNN(nn.Module):
         self.hidden_size = hidden_size
         self.system = nn.RNN(embedding_dim, hidden_size, num_layers, batch_first=True)
         # if batch_first = True : x has to be (batch_size, seq_length, input_size)
-        self.fc = nn.Linear(hidden_size, output_size)  # linear layer. Change it to nonlinear
+        self.fc = nn.Linear(hidden_size, output_size)  # linear layer.
 
     def forward(self, x):
         x_emb = self.embedding(x)
@@ -31,10 +31,10 @@ class RNN(nn.Module):
         out = self.fc(out)
         return out, hidden_state
 
-    def sample(self, seed):     # seed can either be a char or a sequence
+    def sample(self, seed):
         self.eval()
         with torch.no_grad():
-            seed = self.embedding(torch.tensor(encode(seed)))
+            seed = self.torch.tensor(encode(seed))  # no layer norm in sampling
             output, _ = self.system(seed)
             output = output[-1, :]   # select last char probabilities
             logits = self.fc(output)
@@ -46,25 +46,23 @@ class RNN(nn.Module):
 class LSTM(RNN, nn.Module):
     def __init__(self, input_size, output_size, embedding_dim, hidden_size, num_layers):
         super(LSTM, self).__init__(input_size, output_size, embedding_dim, hidden_size, num_layers)
-        self.embedding = nn.Embedding(input_size, embedding_dim)   # each char of seq is embedded
+        self.embedding = nn.Embedding(input_size, embedding_dim)
         self.layer_norm = nn.LayerNorm(embedding_dim)
         self.num_layers = num_layers
         self.hidden_size = hidden_size
         self.system = nn.LSTM(embedding_dim, hidden_size, num_layers, batch_first=True)
-        # if batch_first = True : x has to be (batch_size, seq_length, input_size)
-        self.fc = nn.Linear(hidden_size, output_size)  # linear layer
+        self.fc = nn.Linear(hidden_size, output_size)
 
 
 class GRU(RNN, nn.Module):
     def __init__(self, input_size, output_size, embedding_dim,  hidden_size, num_layers):
         super(GRU, self).__init__(input_size, output_size, embedding_dim, hidden_size, num_layers)
-        self.embedding = nn.Embedding(input_size, embedding_dim)   # each char of seq is embedded
+        self.embedding = nn.Embedding(input_size, embedding_dim)
         self.layer_norm = nn.LayerNorm(embedding_dim)
         self.num_layers = num_layers
         self.hidden_size = hidden_size
         self.system = nn.GRU(embedding_dim, hidden_size, num_layers, batch_first=True)
-        # if batch_first = True : x has to be (batch_size, seq_length, input_size)
-        self.fc = nn.Linear(hidden_size, output_size)  # linear layer
+        self.fc = nn.Linear(hidden_size, output_size)
 
 
 
