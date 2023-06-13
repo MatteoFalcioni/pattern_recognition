@@ -34,7 +34,7 @@ class RNN(nn.Module):
     def sample(self, seed):
         self.eval()
         with torch.no_grad():
-            seed = self.torch.tensor(encode(seed))  # no layer norm in sampling
+            seed = self.embedding(torch.tensor(encode(seed)))
             output, _ = self.system(seed)
             output = output[-1, :]   # select last char probabilities
             logits = self.fc(output)

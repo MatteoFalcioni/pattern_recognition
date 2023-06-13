@@ -15,7 +15,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # fix the seed for reproducibility
 torch.manual_seed(1234567890)
 
-# -------------------------------------------------------------------------------------------------------------------
+# ----------------------------------- user interface ----------------------------------- #
 print('please, insert the configuration file name in order to get the hyperparameters. If you want to use default '
       'hyperparameters, type: default')
 config = configparser.ConfigParser()
@@ -157,7 +157,7 @@ if TRAIN == 'train':
 
         scheduler.step()    # lr = lr*DECAY_RATE after DECAY_STEP steps
 
-        print(f'avg epoch #{epoch} train loss: {epoch_tr_losses[epoch]}.4f\navg epoch #{epoch} validation loss: {epoch_ev_losses[epoch]}.4f')
+        print(f'avg epoch #{epoch} train loss: {epoch_tr_losses[epoch]}\navg epoch #{epoch} validation loss: {epoch_ev_losses[epoch]}')
         tr_losses = []
         ev_losses = []
 
@@ -167,13 +167,13 @@ if TRAIN == 'train':
         # Zip the lists and iterate over the pairs
         for tr_loss, ev_loss, perplexity in zip(epoch_tr_losses, epoch_ev_losses, epoch_perplexities):
             # Write the values to the file with a space in between
-            file.write(f'{tr_loss}.4f\t{ev_loss}.4f\t{perplexity}.4f\n')
+            file.write(f'{tr_loss}\t{ev_loss}\t{perplexity}\n')
 
     end = time.time()
     training_time = end - start
 
     with open('toplot/efficiency.txt', 'a') as file:
-        file.write(f'{model_choice}\t{training_time}.4f')
+        file.write(f'{model_choice}\t{training_time}')
 
     print('do you want to save the trained model? Type yes or no')
     CHOICE = input()
