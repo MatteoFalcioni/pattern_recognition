@@ -56,7 +56,7 @@ You can use this program in two ways:
 * you can use a pretrained model, contained in the [pretrained](pretrained) folder, to generate text in the style of Dante's Divina Commedia. 
 * or, you can train the model again and then generate text after. 
 
-Once you have chosen your goal, in order to start the program you have to do the following steps after launching the file RNN.py:
+Once you have chosen your goal, in order to start the program you have to do the following steps after launching the file [RNN.py](RNN.py):
 
 - First, you can either use the default hyperparameters for the model contained in the file [configuration](configuration.txt) by typing 'default' in the command line, or eventually choose your own creating a new configuration file in the syntax of [configuration](configuration.txt). If you choose to do so, you have to specify the path to the new configuration file in the command line;
 - Second, you will be asked what model do you want to use. Choice is between RNN, LSTM or GRU;
@@ -67,4 +67,10 @@ If you want to print out the stored data, you must launch the file plot.py. This
 
 ## Project Structure
 This is how the project has been divided into blocks: 
+- In the [configuration](configuration.txt) file there are the hyperparameters to configurate the model.
+- In the file [models.py](models.py) there are the RNN, LSTM and GRU classes (LSTM and GRU inherit from RNN) and the DataLoader class. 
+- In the file [TEST_RNN.py](TEST_RNN.py) I have put all the testing I have done.
+- The file [RNN.py](RNN.py) contain the main part of the code
+- In the file [plot.py](plot.py) there is the script to plot the results. 
+- in the [pretrained](pretrained) folder you can find pretrained models to use.
 
