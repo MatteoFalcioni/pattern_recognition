@@ -1,23 +1,12 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.utils.data import Dataset, DataLoader
+from data_config import encode, ix_to_char
 
 # Device config
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-# data
-file_name = 'divinacommedia.txt'
-fulltext = open(file_name, 'rb').read().decode(encoding='utf-8').lower()
-
-chars = sorted(list(set(fulltext)))
-fulltext_len, vocab_size = len(fulltext), len(chars)
-
-# build the vocabulary of characters and mappings to / from integers
-char_to_ix = {ch: i for i, ch in enumerate(chars)}
-ix_to_char = {i: ch for i, ch in enumerate(chars)}
-encode = lambda s: [char_to_ix[c] for c in s]  # encoder : take a string , output a list of integers
-decode = lambda l: ''.join([ix_to_char[i] for i in l])  # decoder : take a list of integers, output a string
+# fix the seed for reproducibility
+torch.manual_seed(1234567890)
 
 
 class RNN(nn.Module):
@@ -53,16 +42,6 @@ class RNN(nn.Module):
             sample_ix = torch.multinomial(prob, 1, replacement=True).item()
             return ix_to_char[sample_ix]
 
-    def accuracy(self, input_seqs, targets):    # probably not needed
-        accuracy = 0
-        num_seqs = len(input_seqs)
-        for i in range(num_seqs):
-            predicted_char = self.sample(decode(input_seqs[i]))
-            actual_char = ix_to_char[targets[i]]
-            if actual_char == predicted_char:
-                accuracy += 1.0/float(num_seqs)
-        return accuracy
-
 
 class LSTM(RNN, nn.Module):
     def __init__(self, input_size, output_size, embedding_dim, hidden_size, num_layers):
@@ -86,20 +65,6 @@ class GRU(RNN, nn.Module):
         self.system = nn.GRU(embedding_dim, hidden_size, num_layers, batch_first=True)
         # if batch_first = True : x has to be (batch_size, seq_length, input_size)
         self.fc = nn.Linear(hidden_size, output_size)  # linear layer
-
-
-class DemandDataset(Dataset):
-    def __init__(self, X_train, y_train):
-        self.X_train = X_train
-        self.y_train = y_train
-
-    def __len__(self):
-        return len(self.y_train)
-
-    def __getitem__(self, idx):
-        data = self.X_train[idx]
-        labels = self.y_train[idx]
-        return data, labels
 
 
 
