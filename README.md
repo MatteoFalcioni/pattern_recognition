@@ -64,12 +64,18 @@ If training is chosen, after training you will be asked if you want to save the 
 
 If you want to plot the stored data, you must launch the file [plot.py](plot.py). This will plot not only the losses and the perplexity but also the comparison between the elpased time in training for the three models (stored in the [efficiency](efficiency) file).
 
+To show you some results: these are the plots of the losses and the perplexities after training:
+IMAGE
+And this is the sampled text from the RNN after training: 
+
 ## Project Structure
 This is how the project has been divided into blocks: 
 - In the [configuration](configuration.txt) file there are the hyperparameters to configurate the model.
-- In the file [models.py](models.py) there are the RNN, LSTM and GRU classes (LSTM and GRU inherit from RNN) and the DataLoader class. 
-- In the file [TEST_RNN.py](TEST_RNN.py) I have put all the testing I have done.
-- The file [RNN.py](RNN.py) contain the main part of the code
+- In the [pretrained](pretrained) folder you can find pretrained models to use.
+- In the file [models.py](models.py) there are the RNN, LSTM and GRU classes (LSTM and GRU inherit from RNN) 
+- In the file [data_config.py](data_config.py) there are the Dataloader class and the encoder and decoder functions.  
+- In the file [TEST_RNN.py](TEST_RNN.py) I have put the testing I have done.
+- The file [RNN.py](RNN.py) contains the main part of the code, with the training loop and the text generation loop.
 - In the file [plot.py](plot.py) there is the script to plot the results, which are contained in the [toplot](toplot) repository and rewritten after training. 
-- in the [pretrained](pretrained) folder you can find pretrained models to use.
+
 
