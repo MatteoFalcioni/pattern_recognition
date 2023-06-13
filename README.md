@@ -9,9 +9,7 @@ This repository contains the implementation of a Recurrent Neural Network (RNN) 
 - [Project structure](#Project_structure)
 
 ## Introduction
-Recurrent Neural Networks (RNNs) are a class of neural networks that are well-suited for sequential data, such as text. They have the ability to retain information from previous steps and use it to make predictions or generate new sequences. In this project, we explore the effectiveness of RNNs by comparing two popular variants: LSTM and GRU.
-
-To evaluate the performance of LSTM and GRU models, we train them on a dataset consisting of Dante's Divina Commedia. The models are then used to generate text that resembles the style and language of the original work.
+Recurrent Neural Networks (RNNs) are a class of neural networks that are well-suited for sequential data, such as text. They have the ability to retain information from previous steps and use it to make predictions or generate new sequences. In this project, we explore the effectiveness of RNNs by comparing two popular variants: LSTM and GRU. To evaluate the performance of LSTM and GRU models, we train them on a dataset consisting of Dante's Divina Commedia. The models are then used to generate text that resembles the style and language of the original work.
 
 The architecture of an RNN is characterized by recurrent connections, which form a directed cycle in the network, allowing information to be circulated and preserved across different time steps. These connections enable RNNs to process variable-length input sequences, making them flexible and adaptable to different data modalities. 
 
@@ -36,7 +34,7 @@ In the equations below, matrices $W_{\alpha \beta}$ contain the weights of the i
 
 <img src="readme_img/LSTM_eqs.png" alt="" width="300">
 
-The initial values are $c_0=0$ and $h_0=0$ and the operator $\odot$ denotes the element-wise product. The subscript $t$ indexes the time step.
+$\odot$ denotes the element-wise product and the subscript $t$ indexes the time step.
 Here is a sketch of the LSTM architecture:
 
 <img src="readme_img//LSTM.png" alt="" width="400">
@@ -64,14 +62,20 @@ Once you have chosen your goal, in order to start the program you have to do the
 
 If training is chosen, after training you will be asked if you want to save the new learnt parameters and therefore overwrite the pretrained models'              parameters in the [pretrained](pretrained) folder. If you are satisfied with the result (i.e. the values of the training loss and the validation loss) then you should save your model in order to use it again. 
 
-If you want to plot the stored data, you must launch the file [plot.py](plot.py). This will plot not only the losses and the perplexity but also the comparison between the efficiency of the three models (stored in the [efficiency](efficiency) file), which is based on computing the hamming distance and the cosine similarity between the generated text, by measuring the accuracy of the prediction on the validation set and the elapsed time in the training process. 
+If you want to plot the stored data, you must launch the file [plot.py](plot.py). This will plot not only the losses and the perplexity but also the comparison between the elpased time in training for the three models (stored in the [efficiency](efficiency) file).
+
+To show you some results: these are the plots of the losses and the perplexities after training:
+IMAGE
+And this is the sampled text from the RNN after training: 
 
 ## Project Structure
 This is how the project has been divided into blocks: 
 - In the [configuration](configuration.txt) file there are the hyperparameters to configurate the model.
-- In the file [models.py](models.py) there are the RNN, LSTM and GRU classes (LSTM and GRU inherit from RNN) and the DataLoader class. 
-- In the file [TEST_RNN.py](TEST_RNN.py) I have put all the testing I have done.
-- The file [RNN.py](RNN.py) contain the main part of the code
+- In the [pretrained](pretrained) folder you can find pretrained models to use.
+- In the file [models.py](models.py) there are the RNN, LSTM and GRU classes (LSTM and GRU inherit from RNN) 
+- In the file [data_config.py](data_config.py) there are the Dataloader class and the encoder and decoder functions.  
+- In the file [TEST_RNN.py](TEST_RNN.py) I have put the testing I have done.
+- The file [RNN.py](RNN.py) contains the main part of the code, with the training loop and the text generation loop.
 - In the file [plot.py](plot.py) there is the script to plot the results, which are contained in the [toplot](toplot) repository and rewritten after training. 
-- in the [pretrained](pretrained) folder you can find pretrained models to use.
+
 
