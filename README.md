@@ -71,6 +71,6 @@ This is how the project has been divided into blocks:
 - In the file [models.py](models.py) there are the RNN, LSTM and GRU classes (LSTM and GRU inherit from RNN) and the DataLoader class. 
 - In the file [TEST_RNN.py](TEST_RNN.py) I have put all the testing I have done.
 - The file [RNN.py](RNN.py) contain the main part of the code
-- In the file [plot.py](plot.py) there is the script to plot the results. 
+- In the file [plot.py](plot.py) there is the script to plot the results, which are contained in the [toplot](toplot) repository and rewritten after training. 
 - in the [pretrained](pretrained) folder you can find pretrained models to use.
 
