@@ -101,33 +101,5 @@ class DemandDataset(Dataset):
         labels = self.y_train[idx]
         return data, labels
 
-    """def forward(self, x):
-        x_emb = self.embedding(x)
-        x_emb = self.layer_norm(x_emb)
-        out, hidden_state = self.lstm(x_emb)
-        if x.size(0) > 1:
-            out = out[:, -1, :]
 
-        out = self.fc(out)
-        return out, hidden_state
 
-    def sample(self, seed):     # seed can either be a char or a sequence
-        self.eval()
-        with torch.no_grad():
-            seed = self.embedding(torch.tensor(encode(seed)))
-            output, _ = self.lstm(seed)
-            output = output[-1, :]
-            logits = self.fc(output)
-            prob = F.softmax(logits, dim=0)
-            sample_ix = torch.multinomial(prob, 1, replacement=True).item()
-            return ix_to_char[sample_ix]
-
-    def accuracy(self, input_seqs, targets):
-        accuracy = 0
-        num_seqs = len(input_seqs)
-        for i in range(num_seqs):
-            predicted_char = self.sample(decode(input_seqs[i]))
-            actual_char = ix_to_char[targets[i]]
-            if actual_char == predicted_char:
-                accuracy += 1.0/float(num_seqs)
-        return accuracy"""

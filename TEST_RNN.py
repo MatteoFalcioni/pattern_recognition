@@ -139,10 +139,6 @@ def test_sample(system):
         assert(subtraction[k] < 0.001)
 
 
-"""def test_accuracy():
-    model.accuracy(ev_inputs, ev_targets) * 100"""
-
-
 if model_choice == 'RNN':
     model = models.RNN(INPUT_SIZE, OUTPUT_SIZE, EMBEDDING_DIM, HIDDEN_SIZE, NUM_LAYERS).to(device)
 if model_choice == 'LSTM':
@@ -264,7 +260,7 @@ if TRAIN == 'train':
         ev_losses = []
 
     # write losses on separate file
-    file_toplot = f'{model_choice}_toplot'
+    file_toplot = f'toplot/{model_choice}_toplot'
     with open(file_toplot, 'w') as file:
         # Zip the lists and iterate over the pairs
         for tr_loss, ev_loss, perplexity in zip(epoch_tr_losses, epoch_ev_losses, epoch_perplexities):
@@ -286,7 +282,7 @@ accuracy = model.accuracy(ev_inputs, ev_targets)*100
 
 end = time.time()
 elapsed_time = end - start
-with open('efficiency.txt', 'a') as file:
+with open('toplot/efficiency.txt', 'a') as file:
     file.write(f'{model_choice}\t{hamming_d}\t{cosine_d}\t{accuracy}\t{elapsed_time}')
 
 print(f'computing distances between sampled string and real string:\nhamming distance = {hamming_d}\ncosine '

@@ -6,7 +6,7 @@ model_choice = input().upper()
 while model_choice != 'GRU' and model_choice != 'LSTM' and model_choice != 'RNN':
     print(f'model {model_choice} is an invalid keyword. Choose between RNN, LSTM or GRU')
     model_choice = input()
-file_toplot = f'{model_choice}_toplot'
+file_toplot = f'toplot/{model_choice}_toplot'
 
 # Read the values from the file
 epoch_tr_losses = []
