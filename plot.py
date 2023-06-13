@@ -1,12 +1,19 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+print('please, enter the RNN model of which you want to plot the results. Choices are between: RNN, LSTM, GRU')
+model_choice = input().upper()
+while model_choice != 'GRU' and model_choice != 'LSTM' and model_choice != 'RNN':
+    print(f'model {model_choice} is an invalid keyword. Choose between RNN, LSTM or GRU')
+    model_choice = input()
+file_toplot = f'{model_choice}_toplot'
+
 # Read the values from the file
 epoch_tr_losses = []
 epoch_ev_losses = []
 perplexities = []
 
-with open('toplot.txt', 'r') as file:
+with open(file_toplot, 'r') as file:
     for line in file:
         tr_loss, ev_loss, perp = line.strip().split()
         epoch_tr_losses.append(float(tr_loss))

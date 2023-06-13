@@ -293,7 +293,7 @@ for epoch in range(NUM_EPOCHS):
 
     scheduler.step()    # lr = lr*0.1
 
-    print(f'avg epoch #{epoch} train loss: {epoch_tr_losses[epoch]}\navg epoch #{epoch} validation loss: {epoch_ev_losses[epoch]}')
+    print(f'avg epoch #{epoch} train loss: {epoch_tr_losses[epoch]}.4f\navg epoch #{epoch} validation loss: {epoch_ev_losses[epoch]}.4f')
 
     tr_losses = []
     ev_losses = []

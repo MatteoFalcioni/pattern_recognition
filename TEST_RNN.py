@@ -206,66 +206,70 @@ epoch_tr_losses = []
 epoch_ev_losses = []
 epoch_perplexities = []
 
-print('starting training and evaluation...')
-for epoch in range(NUM_EPOCHS):
-    print(f'epoch [{epoch}/{NUM_EPOCHS}]')
-    for X, y in tr_dataloader:
-        # training
-        model.train()
+min_epochs = 30
 
-        # forward pass
-        outputs, h_n = model(X)
-        tr_loss = criterion(outputs, y)
+if TRAIN == 'train':
+    print('starting training and evaluation...')
+    for epoch in range(NUM_EPOCHS):
+        print(f'epoch [{epoch}/{NUM_EPOCHS}]')
+        for X, y in tr_dataloader:
+            # training
+            model.train()
 
-        # backward and optimize
-        optimizer.zero_grad()
-        tr_loss.backward()
-        optimizer.step()
+            # forward pass
+            outputs, h_n = model(X)
+            tr_loss = criterion(outputs, y)
 
-        epoch_tr_loss += tr_loss.item() / float(n_train)
+            # backward and optimize
+            optimizer.zero_grad()
+            tr_loss.backward()
+            optimizer.step()
 
-    epoch_tr_losses.append(epoch_tr_loss)
-    epoch_tr_loss = 0
+            epoch_tr_loss += tr_loss.item() / float(n_train)
 
-    epoch_perplexity = 0
-    for X, y in ev_dataloader:
-        # evaluation
-        model.eval()
+        epoch_tr_losses.append(epoch_tr_loss)
+        epoch_tr_loss = 0
 
-        with torch.no_grad():
-            # evaluate loss on eval set
-            out, _ = model(X)
-            ev_loss = criterion(out, y)
+        epoch_perplexity = 0
+        for X, y in ev_dataloader:
+            # evaluation
+            model.eval()
 
-            epoch_ev_loss += ev_loss.item() / float(n_eval)
-            epoch_perplexity += math.exp(ev_loss.item())/float(n_eval)  # 'average' perplexity
+            with torch.no_grad():
+                # evaluate loss on eval set
+                out, _ = model(X)
+                ev_loss = criterion(out, y)
 
-    epoch_ev_losses.append(epoch_ev_loss)
-    epoch_ev_loss = 0
-    epoch_perplexities.append(epoch_perplexity)
-    epoch_perplexity = 0
+                epoch_ev_loss += ev_loss.item() / float(n_eval)
+                epoch_perplexity += math.exp(ev_loss.item())/float(n_eval)  # 'average' perplexity
 
-    # Check for overfitting
-    if epoch_ev_loss >= previous_val_loss and epoch > 20:
-        print("Overfitting detected! Stopping the training loop...")
-        break
+        epoch_ev_losses.append(epoch_ev_loss)
+        epoch_ev_loss = 0
+        epoch_perplexities.append(epoch_perplexity)
+        epoch_perplexity = 0
 
-    # Update the previous validation loss variable
-    previous_val_loss = epoch_ev_loss
+        # Check for overfitting
+        if epoch_ev_loss >= previous_val_loss and epoch > min_epochs:
+            print("Overfitting detected! Stopping the training loop...")
+            break
 
-    scheduler.step()    # lr = lr*0.1
+        # Update the previous validation loss variable
+        previous_val_loss = epoch_ev_loss
 
-    print(f'avg epoch #{epoch} train loss: {epoch_tr_losses[epoch]}\navg epoch #{epoch} validation loss: {epoch_ev_losses[epoch]}')
+        scheduler.step()    # lr = lr*0.1 after decay_step steps
 
-    tr_losses = []
-    ev_losses = []
+        print(f'avg epoch #{epoch} train loss: {epoch_tr_losses[epoch]}\navg epoch #{epoch} validation loss: {epoch_ev_losses[epoch]}')
 
-# write losses on separate file
-with open('toplot.txt', 'w') as file:
-    # Zip the lists and iterate over the pairs
-    for tr_loss, ev_loss, perplexity in zip(epoch_tr_losses, epoch_ev_losses, epoch_perplexities):
-        # Write the values to the file with a space in between
-        file.write(f'{tr_loss}\t{ev_loss}\t{perplexity}\n')
+        tr_losses = []
+        ev_losses = []
+
+    # write losses on separate file
+    file_toplot = f'{model_choice}_toplot'
+    with open(file_toplot, 'w') as file:
+        # Zip the lists and iterate over the pairs
+        for tr_loss, ev_loss, perplexity in zip(epoch_tr_losses, epoch_ev_losses, epoch_perplexities):
+            # Write the values to the file with a space in between
+            file.write(f'{tr_loss}\t{ev_loss}\t{perplexity}\n')
 
 seed_seq = 'nel mezzo del cammin di nostra vita'
 sample_seq = [c for c in seed_seq]
@@ -275,41 +279,33 @@ for step in range(sample_len):
     sample_seq.append(prediction)
 sampled_txt = ''.join(sample_seq)
 print(f'sampled text: {sampled_txt}')
-
 true_text = fulltext[:len(sample_seq)]
 
 hamming_d, cosine_d = distances(sampled_txt, true_text)
 accuracy = model.accuracy(ev_inputs, ev_targets)*100
-with open('efficiency.txt', 'w') as file:
-    file.write(f'{model_choice}\t{hamming_d}\t{cosine_d}\t{accuracy}')
 
+end = time.time()
+elapsed_time = end - start
+with open('efficiency.txt', 'a') as file:
+    file.write(f'{model_choice}\t{hamming_d}\t{cosine_d}\t{accuracy}\t{elapsed_time}')
 
 print(f'computing distances between sampled string and real string:\nhamming distance = {hamming_d}\ncosine '
       f'similarity = {cosine_d}')
 
-print(f'accuracy = {model.accuracy(ev_inputs, ev_targets)*100}%')
-
-end = time.time()
-elapsed_time = end - start
-
 print(f'elapsed time in process: {int(elapsed_time/60)} minutes.')
-"""\n***** list of hyperparameters'
-used: *****\nembedding_dim = {EMBEDDING_DIM},\nseq_length = {SEQ_LENGTH},\nstep_size =  {STEP_SIZE},'
-\nhidden_size = {HIDDEN_SIZE}, \nbatch_size = {BATCH_SIZE},\nnum_layers = {NUM_LAYERS},\nnum_epochs = '
-{NUM_EPOCHS},\nlearning rate = {LEARNING_RATE},\nlr decay factor={DECAY_RATE}\nlr decay step={DECAY_STEP}')"""
 
-
-print('do you want to save your model? Type yes or no')
-CHOICE = input()
-while CHOICE != 'yes' and CHOICE != 'no':
-    print('this key is not existing, type yes or no to choose whether to save the model or not')
+if TRAIN == 'train':
+    print('do you want to save the trained model? Type yes or no')
     CHOICE = input()
+    while CHOICE != 'yes' and CHOICE != 'no':
+        print('this key is not existing, type yes or no to choose whether to save the model or not')
+        CHOICE = input()
 
-if CHOICE == 'yes':
-    # saving the model's state_dict
-    PATH = f'pretrained/{model_choice}.pth'
-    torch.save(model.state_dict(), PATH)    # this is saved in train mode. to use it, put it back to eval with .eval()
-    print('model has been saved successfully')
+    if CHOICE == 'yes':
+        # saving the model's state_dict
+        PATH = f'pretrained/{model_choice}.pth'
+        torch.save(model.state_dict(), PATH)    # this is saved in train mode. to use it, put it back to eval with .eval()
+        print('model has been saved successfully')
 
     # when you re-create the model, do the following:
     # (i) set up model: for example, model=RNN(...)

@@ -75,6 +75,32 @@ class LSTM(RNN, nn.Module):
         # if batch_first = True : x has to be (batch_size, seq_length, input_size)
         self.fc = nn.Linear(hidden_size, output_size)  # linear layer
 
+
+class GRU(RNN, nn.Module):
+    def __init__(self, input_size, output_size, embedding_dim,  hidden_size, num_layers):
+        super(GRU, self).__init__(input_size, output_size, embedding_dim, hidden_size, num_layers)
+        self.embedding = nn.Embedding(input_size, embedding_dim)   # each char of seq is embedded
+        self.layer_norm = nn.LayerNorm(embedding_dim)
+        self.num_layers = num_layers
+        self.hidden_size = hidden_size
+        self.system = nn.GRU(embedding_dim, hidden_size, num_layers, batch_first=True)
+        # if batch_first = True : x has to be (batch_size, seq_length, input_size)
+        self.fc = nn.Linear(hidden_size, output_size)  # linear layer
+
+
+class DemandDataset(Dataset):
+    def __init__(self, X_train, y_train):
+        self.X_train = X_train
+        self.y_train = y_train
+
+    def __len__(self):
+        return len(self.y_train)
+
+    def __getitem__(self, idx):
+        data = self.X_train[idx]
+        labels = self.y_train[idx]
+        return data, labels
+
     """def forward(self, x):
         x_emb = self.embedding(x)
         x_emb = self.layer_norm(x_emb)
@@ -105,62 +131,3 @@ class LSTM(RNN, nn.Module):
             if actual_char == predicted_char:
                 accuracy += 1.0/float(num_seqs)
         return accuracy"""
-
-
-class GRU(RNN, nn.Module):
-    def __init__(self, input_size, output_size, embedding_dim,  hidden_size, num_layers):
-        super(GRU, self).__init__(input_size, output_size, embedding_dim, hidden_size, num_layers)
-        self.embedding = nn.Embedding(input_size, embedding_dim)   # each char of seq is embedded
-        self.layer_norm = nn.LayerNorm(embedding_dim)
-        self.num_layers = num_layers
-        self.hidden_size = hidden_size
-        self.system = nn.GRU(embedding_dim, hidden_size, num_layers, batch_first=True)
-        # if batch_first = True : x has to be (batch_size, seq_length, input_size)
-        self.fc = nn.Linear(hidden_size, output_size)  # linear layer
-
-    """def forward(self, x):
-        x_emb = self.embedding(x)
-        x_emb = self.layer_norm(x_emb)
-        out, hidden_state = self.system(x_emb)
-        if x.size(0) > 1:
-            out = out[:, -1, :]
-
-        out = self.fc(out)
-        return out, hidden_state
-
-    def sample(self, seed):
-        self.eval()
-        with torch.no_grad():
-            seed = self.embedding(torch.tensor(encode(seed)))
-            output, _ = self.gru(seed)
-            output = output[-1, :]
-            logits = self.fc(output)
-            prob = F.softmax(logits, dim=0)
-            sample_ix = torch.multinomial(prob, 1, replacement=True).item()
-            return ix_to_char[sample_ix]
-
-    def accuracy(self, input_seqs, targets):
-        accuracy = 0
-        num_seqs = len(input_seqs)
-        for i in range(num_seqs):
-            predicted_char = self.sample(decode(input_seqs[i]))
-            actual_char = ix_to_char[targets[i]]
-            if actual_char == predicted_char:
-                accuracy += 1.0/float(num_seqs)
-        return accuracy"""
-
-
-class DemandDataset(Dataset):
-    def __init__(self, X_train, y_train):
-        self.X_train = X_train
-        self.y_train = y_train
-
-    def __len__(self):
-        return len(self.y_train)
-
-    def __getitem__(self, idx):
-        data = self.X_train[idx]
-        labels = self.y_train[idx]
-        return data, labels
-
-
