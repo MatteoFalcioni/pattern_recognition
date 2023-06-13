@@ -9,9 +9,7 @@ This repository contains the implementation of a Recurrent Neural Network (RNN) 
 - [Project structure](#Project_structure)
 
 ## Introduction
-Recurrent Neural Networks (RNNs) are a class of neural networks that are well-suited for sequential data, such as text. They have the ability to retain information from previous steps and use it to make predictions or generate new sequences. In this project, we explore the effectiveness of RNNs by comparing two popular variants: LSTM and GRU.
-
-To evaluate the performance of LSTM and GRU models, we train them on a dataset consisting of Dante's Divina Commedia. The models are then used to generate text that resembles the style and language of the original work.
+Recurrent Neural Networks (RNNs) are a class of neural networks that are well-suited for sequential data, such as text. They have the ability to retain information from previous steps and use it to make predictions or generate new sequences. In this project, we explore the effectiveness of RNNs by comparing two popular variants: LSTM and GRU. To evaluate the performance of LSTM and GRU models, we train them on a dataset consisting of Dante's Divina Commedia. The models are then used to generate text that resembles the style and language of the original work.
 
 The architecture of an RNN is characterized by recurrent connections, which form a directed cycle in the network, allowing information to be circulated and preserved across different time steps. These connections enable RNNs to process variable-length input sequences, making them flexible and adaptable to different data modalities. 
 
@@ -36,7 +34,7 @@ In the equations below, matrices $W_{\alpha \beta}$ contain the weights of the i
 
 <img src="readme_img/LSTM_eqs.png" alt="" width="300">
 
-The initial values are $c_0=0$ and $h_0=0$ and the operator $\odot$ denotes the element-wise product. The subscript $t$ indexes the time step.
+$\odot$ denotes the element-wise product and the subscript $t$ indexes the time step.
 Here is a sketch of the LSTM architecture:
 
 <img src="readme_img//LSTM.png" alt="" width="400">
