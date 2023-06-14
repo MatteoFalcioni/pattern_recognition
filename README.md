@@ -6,7 +6,7 @@ This repository contains the implementation of a Recurrent Neural Network (RNN) 
 ## Table of Contents
 - [Introduction](#Introduction)
 - [Usage](#Usage)
-- [Project structure](#Project_structure)
+- [Structure](#Structure)
 
 ## Introduction
 Recurrent Neural Networks (RNNs) are a class of neural networks that are well-suited for sequential data, such as text. They have the ability to retain information from previous steps and use it to make predictions or generate new sequences. In this project, we explore the effectiveness of RNNs by comparing two popular variants: LSTM and GRU. To evaluate the performance of LSTM and GRU models, we train them on a dataset consisting of Dante's Divina Commedia. The models are then used to generate text that resembles the style and language of the original work.
@@ -74,7 +74,7 @@ LSTM: "nel mezzo del cammin di nostra vita fighio ul seglar dira sframa o facea 
 
 GRU: "nel mezzo del cammin di nostra vita di che tante più dal lungi vien corto son a muover li altra spondavetti di lui creatura lì haemo e disse verdimiso la passo presando venuto l poco era vedea tutt d annostra laggio la termava l alpe a lunga sovra di sotto tal un tolo dritto raccoflor"
 
-## Project structure
+## Structure
 This is how the project has been divided into blocks: 
 - In the [configuration](configuration.txt) file there are the hyperparameters to configurate the model.
 - In the [pretrained](pretrained) folder you can find pretrained models to use.
