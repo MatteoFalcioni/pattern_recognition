@@ -67,7 +67,7 @@ To show you some results: these are the plots of the losses and the perplexities
 <img src="readme_img/losses.png" alt="" width="900">
 
 Here are the training times plotted:
-<img src="readme_img/training_time.png" alt="" width="600">
+<img src="readme_img/training_time.png" alt="" width="200">
 
 And this is the sampled text from the RNN vs LSTM vs GRU after training, with the prompt sequence "nel mezzo del cammin di nostra vita": 
 
