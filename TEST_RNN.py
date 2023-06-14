@@ -76,7 +76,7 @@ def test_sample():
 
     test_samples = [0.0] * vocab_size
     subtraction = [0.0] * vocab_size
-    n_iter = 300000
+    n_iter = 400000
     for i in range(n_iter):
         test_prediction = model.sample(test_seq)
         test_samples[char_to_ix[test_prediction]] += 1.0/n_iter
