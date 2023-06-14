@@ -50,6 +50,9 @@ Here is a sketch of its architecture:
 <img src="readme_img//GRU.png" alt="" width="400">
 
 ## Usage
+First of all, you need to install PyTorch by running the command:
+$ pip install torch torchvision
+
 You can use this program in two ways: 
 * you can use a pretrained model, contained in the [pretrained](pretrained) folder, to generate text in the style of Dante's Divina Commedia. 
 * or, you can train the model again and then generate text after. 
