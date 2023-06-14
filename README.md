@@ -60,7 +60,7 @@ Once you have chosen your goal, in order to start the program you have to do the
 
 If training is chosen, after training you will be asked if you want to save the new learnt parameters and therefore overwrite the pretrained models'              parameters in the [pretrained](pretrained) folder. If you are satisfied with the result (i.e. the values of the training loss and the validation loss) then you should save your model in order to use it again. 
 
-If you want to plot the stored data, you must launch the file [plot.py](plot.py). This will plot not only the losses and the perplexity but also the comparison between the elpased time in training for the three models (stored in the [efficiency](efficiency) file).
+If you want to plot the stored data, you must launch the file [plot.py](plot.py). This will plot not only the losses and the perplexity but also the comparison between the elapsed time in training for the three models (stored in the [efficiency](efficiency) file).
 
 To show you some results: these are the plots of the losses and the perplexities after training:
 
