@@ -35,8 +35,8 @@ print('All right! Now, type train if you want to train the model, type generate 
 TRAIN = input().lower()
 while TRAIN != 'train' and TRAIN != 'generate':
     print(f'model {TRAIN} is an invalid keyword. Choose between train or generate.')
-    TRAIN = input()
-# -------------------------------------------------------------------------------------------------------------------
+    TRAIN = input().lower()
+# ----------------------------------------------------------------------------------------
 
 # get hyperparameters from configuration file
 SEQ_LENGTH = int(config.get('Hyperparameters', 'SEQ_LENGTH'))
@@ -168,10 +168,10 @@ if TRAIN == 'train':
         file.write(f'\n{model_choice}\t{training_time}')
 
     print('do you want to save the trained model? Type yes or no')
-    CHOICE = input()
+    CHOICE = input().lower()
     while CHOICE != 'yes' and CHOICE != 'no':
         print('this key is not existing, type yes or no to choose whether to save the model or not')
-        CHOICE = input()
+        CHOICE = input().lower
 
     if CHOICE == 'yes':
         # saving the model's state_dict
