@@ -62,12 +62,11 @@ If training is chosen, after training you will be asked if you want to save the 
 
 If you want to plot the stored data, you must launch the file [plot.py](plot.py). This will plot not only the losses and the perplexity but also the comparison between the elapsed time in training for the three models (stored in the [efficiency](efficiency) file).
 
-To show you some results: these are the plots of the losses and the perplexities after training:
+To show you some results: these are the plots of the losses and the perplexities after training, and the training times:
 
 <img src="readme_img/losses.png" alt="" width="900">
 
-Here are the training times plotted:
-<img src="readme_img/training_time.png" alt="" width="200">
+<img src="readme_img/training_time.png" alt="" width="400">
 
 And this is the sampled text from the RNN vs LSTM vs GRU after training, with the prompt sequence "nel mezzo del cammin di nostra vita": 
 
