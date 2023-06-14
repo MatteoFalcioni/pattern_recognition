@@ -51,17 +51,17 @@ Here is a sketch of its architecture:
 
 ## Usage
 First of all, you need to install PyTorch by running the command:
-`pip install torch torchvision`
+`pip install torch`
 
-You can use this program in two ways: 
+Now you can use this program in two ways: 
 * you can use a pretrained model, contained in the [pretrained](pretrained) folder, to generate text in the style of Dante's Divina Commedia. 
 * or, you can train the model again and then generate text after. 
 
 Once you have chosen your goal, in order to start the program you have to do the following steps after launching the file [RNN.py](RNN.py):
 
-1. First, you can either use the default hyperparameters for the model contained in the file [configuration](configuration.txt) by typing 'default' in the command line, or eventually choose your own creating a new configuration file in the syntax of [configuration](configuration.txt). If you choose to do so, you have to specify the path to the new configuration file in the command line;
-2. Second, you will be asked what model do you want to use. Choice is between RNN, LSTM or GRU;
-3. Third, you will be asked if you want to train your model or use a [pretrained](pretrained) one to generate text. If you choose the first option, you must type 'train' in the command line, otherwise you should type 'generate'. During training, training loss and validation loss are printed at every epoch in order to check for overfitting. Such data are stored in the [toplot](toplot) folder; 
+1. First, you can either use the default hyperparameters for the model contained in the file [configuration](configuration.txt) by typing `default` in the command line, or eventually choose your own creating a new configuration file in the syntax of [configuration](configuration.txt). If you choose to do so, you have to specify the path to the new configuration file in the command line;
+2. Second, you will be asked what model do you want to use. Choice is between `RNN`, `LSTM` or `GRU`;
+3. Third, you will be asked if you want to train your model or use a [pretrained](pretrained) one to generate text. If you choose the first option, you must type `train` in the command line, otherwise you should type `generate`. During training, training loss and validation loss are printed at every epoch in order to check for overfitting. Such data are stored in the [toplot](toplot) folder; 
 
 If training is chosen, after training you will be asked if you want to save the new learnt parameters and therefore overwrite the pretrained models'              parameters in the [pretrained](pretrained) folder. If you are satisfied with the result (i.e. the values of the training loss and the validation loss) then you should save your model in order to use it again. 
 
