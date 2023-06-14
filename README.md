@@ -66,6 +66,9 @@ To show you some results: these are the plots of the losses and the perplexities
 
 <img src="readme_img/losses.png" alt="" width="900">
 
+Here are the training times plotted:
+<img src="readme_img/training_time.png" alt="" width="600">
+
 And this is the sampled text from the RNN vs LSTM vs GRU after training, with the prompt sequence "nel mezzo del cammin di nostra vita": 
 
 RNN: "nel mezzo del cammin di nostra vita nome disprai seme dispienge rimaliggiar di questa parer trasmetto poco i mudai son laisi per luci latto averava i pace porregui del ciel potea per uscimisse e sacque sovera questo si dimmi gristond io rovi chi miei simira e vidi voisami volte inver"
