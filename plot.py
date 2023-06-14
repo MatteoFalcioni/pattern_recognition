@@ -99,7 +99,7 @@ bar_width = 0.2
 x_pos = np.arange(len(labels))
 
 # Plot the bars
-plt.bar(x_pos - bar_width, values, width=bar_width, label='training time')
+plt.bar(labels, values, width=bar_width, label='training time')
 
 # Set the x-axis tick labels to be the labels from the first column
 plt.xticks(x_pos, labels)

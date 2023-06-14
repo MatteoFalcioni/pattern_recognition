@@ -1,5 +1,5 @@
 import torch
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset
 
 # Device config
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -20,7 +20,9 @@ encode = lambda s: [char_to_ix[c] for c in s]  # encoder : take a string , outpu
 decode = lambda l: ''.join([ix_to_char[i] for i in l])  # decoder : take a list of integers, output a string
 
 
-class DemandDataset(Dataset):
+class DemandDataset(Dataset):   # override torch dataset
+    """class used to instantiate the dataset"""
+
     def __init__(self, X_train, y_train):
         self.X_train = X_train
         self.y_train = y_train
@@ -35,6 +37,8 @@ class DemandDataset(Dataset):
 
 
 def initialize_seq(corpus, seq_length, step_size, train=True):
+    """this function initializes inputs and targets sequences"""
+
     encoded_text = encode(corpus)
     k = int(0.8 * len(corpus))
     if train:

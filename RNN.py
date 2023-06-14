@@ -9,7 +9,7 @@ import models
 import data_config
 from data_config import initialize_seq, vocab_size, fulltext
 
-# Device config
+# Device config. Use GPU if possible, else use CPU
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # fix the seed for reproducibility
@@ -68,13 +68,13 @@ elif model_choice == 'GRU':
 INPUT_SIZE = vocab_size
 OUTPUT_SIZE = vocab_size
 
-# initialize data
+# initialize inputs and targets for train and validation
 tr_inputs, tr_targets = initialize_seq(fulltext, SEQ_LENGTH, STEP_SIZE)
 ev_inputs, ev_targets = initialize_seq(fulltext, SEQ_LENGTH, STEP_SIZE, train=False)
 tr_dataset = data_config.DemandDataset(torch.tensor(tr_inputs).to(device), torch.tensor(tr_targets).to(device))
 ev_dataset = data_config.DemandDataset(torch.tensor(ev_inputs).to(device), torch.tensor(ev_targets).to(device))
-tr_dataloader = DataLoader(tr_dataset, shuffle=True, batch_size=BATCH_SIZE)
-ev_dataloader = DataLoader(ev_dataset, shuffle=True, batch_size=BATCH_SIZE)
+tr_dataloader = DataLoader(tr_dataset, shuffle=True, batch_size=BATCH_SIZE)     # training set (80% of data)
+ev_dataloader = DataLoader(ev_dataset, shuffle=True, batch_size=BATCH_SIZE)     # validation set (20% of data)
 n_train = len(tr_dataloader)
 n_eval = len(ev_dataloader)
 
@@ -90,7 +90,7 @@ elif model_choice == 'GRU':
 if TRAIN == 'generate':
     state_dict = torch.load(f'pretrained/{model_choice}.pth')
     model.load_state_dict(state_dict)   # load pre-trained state dict
-    model.to(device)
+    model.to(device)    # send it to gpu
     model.eval()    # models are saved in train mode
 
 
@@ -161,7 +161,7 @@ if TRAIN == 'train':
         tr_losses = []
         ev_losses = []
 
-    # write losses file
+    # write losses to file
     file_toplot = f'toplot/{model_choice}_toplot.txt'
     with open(file_toplot, 'w') as file:
         # Zip the lists and iterate over the pairs
@@ -172,8 +172,8 @@ if TRAIN == 'train':
     end = time.time()
     training_time = end - start
 
-    with open('toplot/efficiency.txt', 'a') as file:
-        file.write(f'{model_choice}\t{training_time}')
+    with open('toplot/efficiency.txt', 'a') as file:    # write training time to file
+        file.write(f'{model_choice}\t{training_time}\n')
 
     print('do you want to save the trained model? Type yes or no')
     CHOICE = input()
@@ -184,7 +184,7 @@ if TRAIN == 'train':
     if CHOICE == 'yes':
         # saving the model's state_dict
         PATH = f'pretrained/{model_choice}.pth'
-        torch.save(model.state_dict(), PATH)  # this is saved in train mode
+        torch.save(model.state_dict(), PATH)  # this is saved in train mode (!)
         print('model has been saved successfully')
 
 # end of training
