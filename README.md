@@ -51,7 +51,7 @@ Here is a sketch of its architecture:
 
 ## Usage
 First of all, you need to install PyTorch by running the command:
-$ pip install torch torchvision
+' pip install torch torchvision '
 
 You can use this program in two ways: 
 * you can use a pretrained model, contained in the [pretrained](pretrained) folder, to generate text in the style of Dante's Divina Commedia. 
