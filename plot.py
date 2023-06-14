@@ -105,7 +105,7 @@ plt.bar(labels, values, width=bar_width, label='training time')
 plt.xticks(x_pos, labels)
 
 # Set labels and title
-plt.xlabel('Label')
+plt.xlabel('Models')
 plt.ylabel('Elapsed time (seconds)')
 plt.title('Elapsed time during the training process')
 

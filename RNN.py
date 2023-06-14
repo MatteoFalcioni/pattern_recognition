@@ -173,7 +173,7 @@ if TRAIN == 'train':
     training_time = end - start
 
     with open('toplot/efficiency.txt', 'a') as file:    # write training time to file
-        file.write(f'{model_choice}\t{training_time}\n')
+        file.write(f'\n{model_choice}\t{training_time}')
 
     print('do you want to save the trained model? Type yes or no')
     CHOICE = input()

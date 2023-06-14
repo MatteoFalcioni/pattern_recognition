@@ -44,13 +44,12 @@ class RNN(nn.Module):
 
     def __init__(self, input_size, output_size, embedding_dim, hidden_size, num_layers):
         super(RNN, self).__init__()
-        self.embedding = nn.Embedding(input_size, embedding_dim)   # each char of seq is embedded
-        self.layer_norm = nn.LayerNorm(embedding_dim)
+        self.embedding = nn.Embedding(input_size, embedding_dim)   # embedding layer
+        self.layer_norm = nn.LayerNorm(embedding_dim)   # layer normalization
         self.num_layers = num_layers
         self.hidden_size = hidden_size
-        self.system = nn.RNN(embedding_dim, hidden_size, num_layers, batch_first=True)
-        # if batch_first = True : x has to be (batch_size, seq_length, input_size)
-        self.fc = nn.Linear(hidden_size, output_size)  # linear layer.
+        self.system = nn.RNN(embedding_dim, hidden_size, num_layers, batch_first=True)  # if batch_first = True : x has to be (batch_size, seq_length, input_size)
+        self.fc = nn.Linear(hidden_size, output_size)  # linear layer
 
     def forward(self, x):
         """
@@ -87,13 +86,13 @@ class RNN(nn.Module):
                 the sampled index from the resulting probability distribution obtained from the model
         """
 
-        self.eval()
+        self.eval()     # sampling always in eval mode (!)
         with torch.no_grad():
             seed = self.embedding(torch.tensor(encode(seed)))
             output, _ = self.system(seed)   # no layer normalization in sampling
             output = output[-1, :]   # select last char probabilities
             logits = self.fc(output)
-            prob = F.softmax(logits, dim=0)
+            prob = F.softmax(logits, dim=0)     # softmax on logits produces a probability distribution
             sample_ix = torch.multinomial(prob, 1, replacement=True).item()
             return ix_to_char[sample_ix]
 
