@@ -1,10 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-RNN_toplot = 'toplot/RNN_toplot.txt'
-LSTM_toplot = 'toplot/LSTM_toplot.txt'
-GRU_toplot = 'toplot/GRU_toplot.txt'
-
 # Read data from text files and store in separate lists
 with open('toplot/RNN_toplot.txt') as file:
     data_model1 = [line.split() for line in file]
@@ -24,10 +20,6 @@ perplexity_model2 = [float(row[2]) for row in data_model2]
 train_loss_model3 = [float(row[0]) for row in data_model3]
 eval_loss_model3 = [float(row[1]) for row in data_model3]
 perplexity_model3 = [float(row[2]) for row in data_model3]
-
-RNN_epochs = len(train_loss_model1)
-LSTM_epochs = len(train_loss_model2)
-GRU_epochs = len(train_loss_model3)
 
 # Create a 2x3 subplot figure
 fig, axs = plt.subplots(2, 3, figsize=(12, 8), sharey='row')
@@ -86,7 +78,7 @@ plt.show()
 
 # -----------------------------
 
-# Read data from the file and store in separate lists
+# Read data from the file and store it
 with open('toplot/efficiency.txt') as file:
     data = [line.split() for line in file]
 
