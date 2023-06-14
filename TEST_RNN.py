@@ -15,8 +15,6 @@ torch.manual_seed(1234567890)
 config = configparser.ConfigParser()
 config.read('configuration.txt')
 
-model_choice = 'RNN'
-
 # hyperparameters
 SEQ_LENGTH = int(config.get('Hyperparameters', 'SEQ_LENGTH'))
 STEP_SIZE = int(config.get('Hyperparameters', 'STEP_SIZE'))
@@ -80,7 +78,7 @@ def test_sample():
     for i in range(n_iter):
         test_prediction = model.sample(test_seq)
         test_samples[char_to_ix[test_prediction]] += 1.0/n_iter
-    # sampled chars distribution should tend to prob distribution for N --> infinity
+    # sampled chars distribution should tend to real prob distribution for N --> infinity
     for k in range(vocab_size):
         subtraction[k] = abs(test_samples[k] - probabilities[k])
         assert(subtraction[k] < 0.001)
