@@ -48,25 +48,25 @@ NUM_LAYERS = int(config.get('Hyperparameters', 'NUM_LAYERS'))
 DECAY_RATE = float(config.get('Hyperparameters', 'DECAY_RATE'))
 NUM_EPOCHS = int(config.get('Hyperparameters', 'NUM_EPOCHS'))
 
+INPUT_SIZE = vocab_size
+OUTPUT_SIZE = vocab_size
 
-# lr choice: 0.1 works alright for RNN until epoch 12, 0.5 works better for LSTM
-# until epoch 25. 0.5 works for gru until 12
 if model_choice == 'RNN':
     LEARNING_RATE = float(config.get('Hyperparameters', 'LEARNING_RATE_RNN'))
     DECAY_STEP = int(config.get('Hyperparameters', 'DECAY_STEP_RNN'))
     MIN_EPOCHS = int(config.get('Hyperparameters', 'MIN_EPOCHS_RNN'))
+    model = models.RNN(INPUT_SIZE, OUTPUT_SIZE, EMBEDDING_DIM, HIDDEN_SIZE, NUM_LAYERS).to(device)
 elif model_choice == 'LSTM':
     LEARNING_RATE = float(config.get('Hyperparameters', 'LEARNING_RATE_LSTM'))
     DECAY_STEP = int(config.get('Hyperparameters', 'DECAY_STEP_LSTM'))
     MIN_EPOCHS = int(config.get('Hyperparameters', 'MIN_EPOCHS_LSTM'))
+    model = models.LSTM(INPUT_SIZE, OUTPUT_SIZE, EMBEDDING_DIM, HIDDEN_SIZE, NUM_LAYERS).to(device)
 elif model_choice == 'GRU':
     LEARNING_RATE = float(config.get('Hyperparameters', 'LEARNING_RATE_GRU'))
     DECAY_STEP = int(config.get('Hyperparameters', 'DECAY_STEP_GRU'))
     MIN_EPOCHS = int(config.get('Hyperparameters', 'MIN_EPOCHS_GRU'))
+    model = models.GRU(INPUT_SIZE, OUTPUT_SIZE, EMBEDDING_DIM, HIDDEN_SIZE, NUM_LAYERS).to(device)
 
-
-INPUT_SIZE = vocab_size
-OUTPUT_SIZE = vocab_size
 
 # initialize inputs and targets for train and validation
 tr_inputs, tr_targets = initialize_seq(fulltext, SEQ_LENGTH, STEP_SIZE)
@@ -77,14 +77,6 @@ tr_dataloader = DataLoader(tr_dataset, shuffle=True, batch_size=BATCH_SIZE)     
 ev_dataloader = DataLoader(ev_dataset, shuffle=True, batch_size=BATCH_SIZE)     # validation set (20% of data)
 n_train = len(tr_dataloader)
 n_eval = len(ev_dataloader)
-
-
-if model_choice == 'RNN':
-    model = models.RNN(INPUT_SIZE, OUTPUT_SIZE, EMBEDDING_DIM, HIDDEN_SIZE, NUM_LAYERS).to(device)
-elif model_choice == 'LSTM':
-    model = models.LSTM(INPUT_SIZE, OUTPUT_SIZE, EMBEDDING_DIM, HIDDEN_SIZE, NUM_LAYERS).to(device)
-elif model_choice == 'GRU':
-    model = models.GRU(INPUT_SIZE, OUTPUT_SIZE, EMBEDDING_DIM, HIDDEN_SIZE, NUM_LAYERS).to(device)
 
 
 if TRAIN == 'generate':
