@@ -47,7 +47,7 @@ Here is a sketch of its architecture:
 ## Usage
 To get started, first open up a terminal and clone the project repository
 ```
-git clone 
+git clone https://github.com/MatteoFalcioni/pattern_recognition
 ```
 
 Then, you will need to install PyTorch by running the command:
