@@ -45,7 +45,12 @@ Here is a sketch of its architecture:
 <img src="readme_img//GRU.png" alt="" width="400">
 
 ## Usage
-First of all, you need to install PyTorch by running the command:
+To get started, first open up a terminal and clone the project repository
+```
+git clone 
+```
+
+Then, you will need to install PyTorch by running the command:
 `pip install torch`
 
 Now you can use this program in two ways: 
