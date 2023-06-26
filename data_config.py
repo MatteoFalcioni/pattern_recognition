@@ -1,11 +1,17 @@
 import torch
 from torch.utils.data import Dataset
+import argparse
+
+"""
+this file contains helper functions and classes to config data  
+"""
 
 # Device config
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # fix the seed for reproducibility
 torch.manual_seed(1234567890)
+
 
 # data
 file_name = 'divinacommedia.txt'
@@ -52,8 +58,8 @@ class DemandDataset(Dataset):
         return len(self.y_train)
 
     def __getitem__(self, idx):
-        """T
-        his method overrides the getitem() function
+        """
+        This method overrides the getitem() function
             Parameters:
                 idx: index of the item we want to get
             Returns:
@@ -62,6 +68,29 @@ class DemandDataset(Dataset):
         data = self.X_train[idx]
         labels = self.y_train[idx]
         return data, labels
+
+
+def get_parser():
+    """
+    Returns parser for choosing:
+    - the configuration file
+    - what model to use
+    - whether to train the model or generate from it
+    - whether to save or discard the trained parameters
+    """
+    parser = argparse.ArgumentParser(description='Argument Parser')
+    parser.add_argument('-c', '--config', help='configuration file path', default='configuration/config_RNN.txt',
+                        type=str)
+    parser.add_argument('-m', '--model', choices=['RNN', 'LSTM', 'GRU'], help='Choose the model', default='RNN',
+                        type=str)
+    parser.add_argument('-t', '--training', choices=['train', 'generate'], help='Choose if the model is going to be '
+                                                                                'trained or if it is just generating '
+                                                                                'text', default='generate',
+                        type=str)
+    parser.add_argument('-s', '--saving', choices=['save', 'discard'], help='Choose if the trained model needs to be '
+                                                                            'saved', default='discard',
+                        type=str)
+    return parser
 
 
 def initialize_seq(corpus, seq_length, step_size, perc=0.8, train=True):

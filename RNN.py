@@ -4,12 +4,13 @@ import math
 import time
 import configparser
 from torch.utils.data import DataLoader
-
 import models
 import data_config
-from data_config import initialize_seq, vocab_size, fulltext
+from data_config import initialize_seq, vocab_size, fulltext, get_parser
 
-# this file contains the main script to train and generate text from the models
+"""
+this file contains the main script to train and generate text from the models.
+"""
 
 # Device config. Use GPU if possible, else use CPU
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
