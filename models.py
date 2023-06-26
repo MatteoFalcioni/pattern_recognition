@@ -43,6 +43,15 @@ class RNN(nn.Module):
     """
 
     def __init__(self, input_size, output_size, embedding_dim, hidden_size, num_layers):
+        """
+        Args
+        ----------
+        input_size : input dimension of the embedding layer
+        output_size : dimension of the output of the whole RNN module
+        embedding_dim : dimension of the embedding
+        hidden_size: dimension of the hidden layer (i.e., # of neurons)
+        num_layers : the number of layers in the model
+        """
         super(RNN, self).__init__()
         self.embedding = nn.Embedding(input_size, embedding_dim)   # embedding layer
         self.layer_norm = nn.LayerNorm(embedding_dim)   # layer normalization
@@ -127,6 +136,15 @@ class LSTM(RNN, nn.Module):
             inherited from RNN, implements sampling from the outputted probability distribution of a seed sequence
     """
     def __init__(self, input_size, output_size, embedding_dim, hidden_size, num_layers):
+        """
+        Args
+        ----------
+        input_size : input dimension of the embedding layer
+        output_size : dimension of the output of the whole LSTM module
+        embedding_dim : dimension of the embedding
+        hidden_size: dimension of the hidden layer (i.e., # of neurons)
+        num_layers : the number of layers in the model
+        """
         super(LSTM, self).__init__(input_size, output_size, embedding_dim, hidden_size, num_layers)
         self.embedding = nn.Embedding(input_size, embedding_dim)
         self.layer_norm = nn.LayerNorm(embedding_dim)
@@ -166,6 +184,15 @@ class GRU(RNN, nn.Module):
             inherited from RNN, implements sampling from the outputted probability distribution of a seed sequence
     """
     def __init__(self, input_size, output_size, embedding_dim,  hidden_size, num_layers):
+        """
+        Args
+        ----------
+        input_size : input dimension of the embedding layer
+        output_size : dimension of the output of the whole GRU module
+        embedding_dim : dimension of the embedding
+        hidden_size: dimension of the hidden layer (i.e., # of neurons)
+        num_layers : the number of layers in the model
+        """
         super(GRU, self).__init__(input_size, output_size, embedding_dim, hidden_size, num_layers)
         self.embedding = nn.Embedding(input_size, embedding_dim)
         self.layer_norm = nn.LayerNorm(embedding_dim)
