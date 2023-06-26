@@ -3,8 +3,13 @@ import torch.nn as nn
 import torch.nn.functional as F
 from data_config import encode, ix_to_char
 
+"""
+this file contains the models' classes implementation (RNN, LSTM and GRU)
+"""
+
 # Device config
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
 # fix the seed for reproducibility
 torch.manual_seed(1234567890)
 

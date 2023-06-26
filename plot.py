@@ -1,6 +1,10 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+"""
+this file contains the plotting of the data stored in the toplot directory
+"""
+
 # Read data from text files and store in separate lists
 with open('toplot/RNN_toplot.txt') as file:
     data_model1 = [line.split() for line in file]

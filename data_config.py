@@ -25,8 +25,8 @@ char_to_ix = {ch: i for i, ch in enumerate(chars)}
 ix_to_char = {i: ch for i, ch in enumerate(chars)}
 
 
-encode = lambda s: [char_to_ix[c] for c in s]  # encoder : take a string , output a list of integers
-decode = lambda l: ''.join([ix_to_char[i] for i in l])  # decoder : take a list of integers, output a string
+lambda_encode = lambda s: [char_to_ix[c] for c in s]  # encoder : take a string , output a list of integers
+lambda_decode = lambda l: ''.join([ix_to_char[i] for i in l])  # decoder : take a list of integers, output a string
 
 
 class DemandDataset(Dataset):
@@ -70,13 +70,45 @@ class DemandDataset(Dataset):
         return data, labels
 
 
+def encode(input_string, encoder=char_to_ix):
+    """
+    this function encodes a string into a list of integers
+        Parameters:
+            input_string: the string to encode
+            encoder: the dictionary through which the encoding is performed
+        Returns:
+            encoded string as a list of integers
+    """
+    encoded_list = []
+    for char in input_string:
+        encoded_list.append(encoder[char])
+
+    return encoded_list
+
+
+def decode(input_list, decoder=ix_to_char):
+    """
+    this function decodes a list of integers into a string of characters
+        Parameters:
+            input_list: the list to decode
+            decoder: the dictionary through which the decoding is performed
+        Returns:
+            decoded string
+    """
+    decoded_string = ''
+    for code in input_list:
+        decoded_string += decoder[code]
+
+    return decoded_string
+
+
 def get_parser():
     """
     Returns parser for choosing:
-    - the configuration file
-    - what model to use
-    - whether to train the model or generate from it
-    - whether to save or discard the trained parameters
+    - the configuration file, with -c
+    - what model to use, with -m
+    - whether to train the model or generate from it, with -t
+    - whether to save or discard the trained parameters, with -s
     """
     parser = argparse.ArgumentParser(description='Argument Parser')
     parser.add_argument('-c', '--config', help='configuration file path', default='configuration/config_RNN.txt',
