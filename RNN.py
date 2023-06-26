@@ -22,7 +22,7 @@ args = parser.parse_args()
 
 config = configparser.ConfigParser()
 
-hyperParam_path = args.CONFIG   # path to the hyperparameters configuration file
+hyperParam_path = args.CONFIG   # path to the Hyperparameters configuration file
 model_choice = args.MODEL   # chosen model
 TRAIN = args.TRAINING   # choice between training or inference
 SAVE = args.SAVING  # choice whether to save or not the model parameters
@@ -30,17 +30,17 @@ SAVE = args.SAVING  # choice whether to save or not the model parameters
 
 # get hyperparameters from configuration file
 config.read(hyperParam_path)
-SEQ_LENGTH = int(config.get(hyperParam_path, 'SEQ_LENGTH'))
-STEP_SIZE = int(config.get(hyperParam_path, 'STEP_SIZE'))
-EMBEDDING_DIM = int(config.get(hyperParam_path, 'EMBEDDING_DIM'))
-HIDDEN_SIZE = int(config.get(hyperParam_path, 'HIDDEN_SIZE'))
-BATCH_SIZE = int(config.get(hyperParam_path, 'BATCH_SIZE'))
-NUM_LAYERS = int(config.get(hyperParam_path, 'NUM_LAYERS'))
-DECAY_RATE = float(config.get(hyperParam_path, 'DECAY_RATE'))
-NUM_EPOCHS = int(config.get(hyperParam_path, 'NUM_EPOCHS'))
-LEARNING_RATE = float(config.get(hyperParam_path, 'LEARNING_RATE'))
-DECAY_STEP = int(config.get(hyperParam_path, 'DECAY_STEP'))
-MIN_EPOCHS = int(config.get(hyperParam_path, 'MIN_EPOCHS'))
+SEQ_LENGTH = int(config.get('Hyperparameters', 'SEQ_LENGTH'))
+STEP_SIZE = int(config.get('Hyperparameters', 'STEP_SIZE'))
+EMBEDDING_DIM = int(config.get('Hyperparameters', 'EMBEDDING_DIM'))
+HIDDEN_SIZE = int(config.get('Hyperparameters', 'HIDDEN_SIZE'))
+BATCH_SIZE = int(config.get('Hyperparameters', 'BATCH_SIZE'))
+NUM_LAYERS = int(config.get('Hyperparameters', 'NUM_LAYERS'))
+DECAY_RATE = float(config.get('Hyperparameters', 'DECAY_RATE'))
+NUM_EPOCHS = int(config.get('Hyperparameters', 'NUM_EPOCHS'))
+LEARNING_RATE = float(config.get('Hyperparameters', 'LEARNING_RATE'))
+DECAY_STEP = int(config.get('Hyperparameters', 'DECAY_STEP'))
+MIN_EPOCHS = int(config.get('Hyperparameters', 'MIN_EPOCHS'))
 
 INPUT_SIZE = vocab_size
 OUTPUT_SIZE = vocab_size
@@ -168,7 +168,7 @@ for step in range(sample_len):
     prediction = model.sample(sample_seq)
     sample_seq.append(prediction)
 sampled_txt = ''.join(sample_seq)
-print(f'sampled text: {sampled_txt}')
+print(f'sampled text from {model_choice}: {sampled_txt}')
 true_text = fulltext[:len(sample_seq)]
 
 
