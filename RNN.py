@@ -15,56 +15,41 @@ this file contains the main script to train and generate text from the models.
 # Device config. Use GPU if possible, else use CPU
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-# ----------------------------------- user interface ----------------------------------- #
-print('please, insert the configuration file name in order to get the hyperparameters. If you want to use default '
-      'hyperparameters, type: default')
+
+# Command line argument parser. See `data_config.get_parser()`.
+parser = get_parser()
+args = parser.parse_args()
+
 config = configparser.ConfigParser()
-config_filename = input()
-if config_filename.lower() == 'default':
-    config.read('configuration.txt')
-else:
-    config.read(config_filename)
 
-print('please, insert the RNN model you want to use. Choices are between: RNN, LSTM, GRU')
-model_choice = input().upper()
-while model_choice != 'GRU' and model_choice != 'LSTM' and model_choice != 'RNN':
-    print(f'model {model_choice} is an invalid keyword. Choose between RNN, LSTM or GRU')
-    model_choice = input()
+hyperParam_path = args.CONFIG   # path to the hyperparameters configuration file
+model_choice = args.MODEL   # chosen model
+TRAIN = args.TRAINING   # choice between training or inference
+SAVE = args.SAVING  # choice whether to save or not the model parameters
 
-print('All right! Now, type train if you want to train the model, type generate if you just want to generate text')
-TRAIN = input().lower()
-while TRAIN != 'train' and TRAIN != 'generate':
-    print(f'model {TRAIN} is an invalid keyword. Choose between train or generate.')
-    TRAIN = input().lower()
-# ----------------------------------------------------------------------------------------
 
 # get hyperparameters from configuration file
-SEQ_LENGTH = int(config.get('Hyperparameters', 'SEQ_LENGTH'))
-STEP_SIZE = int(config.get('Hyperparameters', 'STEP_SIZE'))
-EMBEDDING_DIM = int(config.get('Hyperparameters', 'EMBEDDING_DIM'))
-HIDDEN_SIZE = int(config.get('Hyperparameters', 'HIDDEN_SIZE'))
-BATCH_SIZE = int(config.get('Hyperparameters', 'BATCH_SIZE'))
-NUM_LAYERS = int(config.get('Hyperparameters', 'NUM_LAYERS'))
-DECAY_RATE = float(config.get('Hyperparameters', 'DECAY_RATE'))
-NUM_EPOCHS = int(config.get('Hyperparameters', 'NUM_EPOCHS'))
+config.read(hyperParam_path)
+SEQ_LENGTH = int(config.get(hyperParam_path, 'SEQ_LENGTH'))
+STEP_SIZE = int(config.get(hyperParam_path, 'STEP_SIZE'))
+EMBEDDING_DIM = int(config.get(hyperParam_path, 'EMBEDDING_DIM'))
+HIDDEN_SIZE = int(config.get(hyperParam_path, 'HIDDEN_SIZE'))
+BATCH_SIZE = int(config.get(hyperParam_path, 'BATCH_SIZE'))
+NUM_LAYERS = int(config.get(hyperParam_path, 'NUM_LAYERS'))
+DECAY_RATE = float(config.get(hyperParam_path, 'DECAY_RATE'))
+NUM_EPOCHS = int(config.get(hyperParam_path, 'NUM_EPOCHS'))
+LEARNING_RATE = float(config.get(hyperParam_path, 'LEARNING_RATE'))
+DECAY_STEP = int(config.get(hyperParam_path, 'DECAY_STEP'))
+MIN_EPOCHS = int(config.get(hyperParam_path, 'MIN_EPOCHS'))
 
 INPUT_SIZE = vocab_size
 OUTPUT_SIZE = vocab_size
 
 if model_choice == 'RNN':
-    LEARNING_RATE = float(config.get('Hyperparameters', 'LEARNING_RATE_RNN'))
-    DECAY_STEP = int(config.get('Hyperparameters', 'DECAY_STEP_RNN'))
-    MIN_EPOCHS = int(config.get('Hyperparameters', 'MIN_EPOCHS_RNN'))
     model = models.RNN(INPUT_SIZE, OUTPUT_SIZE, EMBEDDING_DIM, HIDDEN_SIZE, NUM_LAYERS).to(device)
 elif model_choice == 'LSTM':
-    LEARNING_RATE = float(config.get('Hyperparameters', 'LEARNING_RATE_LSTM'))
-    DECAY_STEP = int(config.get('Hyperparameters', 'DECAY_STEP_LSTM'))
-    MIN_EPOCHS = int(config.get('Hyperparameters', 'MIN_EPOCHS_LSTM'))
     model = models.LSTM(INPUT_SIZE, OUTPUT_SIZE, EMBEDDING_DIM, HIDDEN_SIZE, NUM_LAYERS).to(device)
 elif model_choice == 'GRU':
-    LEARNING_RATE = float(config.get('Hyperparameters', 'LEARNING_RATE_GRU'))
-    DECAY_STEP = int(config.get('Hyperparameters', 'DECAY_STEP_GRU'))
-    MIN_EPOCHS = int(config.get('Hyperparameters', 'MIN_EPOCHS_GRU'))
     model = models.GRU(INPUT_SIZE, OUTPUT_SIZE, EMBEDDING_DIM, HIDDEN_SIZE, NUM_LAYERS).to(device)
 
 
@@ -167,13 +152,7 @@ if TRAIN == 'train':
     with open('toplot/efficiency.txt', 'a') as file:    # write training time to file
         file.write(f'\n{model_choice}\t{training_time}')
 
-    print('do you want to save the trained model? Type yes or no')
-    CHOICE = input().lower()
-    while CHOICE != 'yes' and CHOICE != 'no':
-        print('this key is not existing, type yes or no to choose whether to save the model or not')
-        CHOICE = input().lower
-
-    if CHOICE == 'yes':
+    if SAVE == 'saving':
         # saving the model's state_dict
         PATH = f'pretrained/{model_choice}.pth'
         torch.save(model.state_dict(), PATH)  # this is saved in train mode (!)

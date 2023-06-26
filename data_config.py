@@ -25,10 +25,6 @@ char_to_ix = {ch: i for i, ch in enumerate(chars)}
 ix_to_char = {i: ch for i, ch in enumerate(chars)}
 
 
-lambda_encode = lambda s: [char_to_ix[c] for c in s]  # encoder : take a string , output a list of integers
-lambda_decode = lambda l: ''.join([ix_to_char[i] for i in l])  # decoder : take a list of integers, output a string
-
-
 class DemandDataset(Dataset):
     """
         A class that inherits from the torch Dataset structure to implement custom Dataset
@@ -111,15 +107,15 @@ def get_parser():
     - whether to save or discard the trained parameters, with -s
     """
     parser = argparse.ArgumentParser(description='Argument Parser')
-    parser.add_argument('-c', '--config', help='configuration file path', default='configuration/config_RNN.txt',
+    parser.add_argument('-c', '--CONFIG', help='configuration file path', default='configuration/config_RNN.txt',
                         type=str)
-    parser.add_argument('-m', '--model', choices=['RNN', 'LSTM', 'GRU'], help='Choose the model', default='RNN',
+    parser.add_argument('-m', '--MODEL', choices=['RNN', 'LSTM', 'GRU'], help='Choose the model', default='RNN',
                         type=str)
-    parser.add_argument('-t', '--training', choices=['train', 'generate'], help='Choose if the model is going to be '
+    parser.add_argument('-t', '--TRAINING', choices=['train', 'generate'], help='Choose if the model is going to be '
                                                                                 'trained or if it is just generating '
                                                                                 'text', default='generate',
                         type=str)
-    parser.add_argument('-s', '--saving', choices=['save', 'discard'], help='Choose if the trained model needs to be '
+    parser.add_argument('-s', '--SAVING', choices=['save', 'discard'], help='Choose if the trained model needs to be '
                                                                             'saved', default='discard',
                         type=str)
     return parser
