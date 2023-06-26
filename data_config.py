@@ -3,6 +3,7 @@ from torch.utils.data import Dataset
 
 # Device config
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
 # fix the seed for reproducibility
 torch.manual_seed(1234567890)
 
@@ -16,6 +17,8 @@ fulltext_len, vocab_size = len(fulltext), len(chars)
 # build the vocabulary of characters and mappings to / from integers
 char_to_ix = {ch: i for i, ch in enumerate(chars)}
 ix_to_char = {i: ch for i, ch in enumerate(chars)}
+
+
 encode = lambda s: [char_to_ix[c] for c in s]  # encoder : take a string , output a list of integers
 decode = lambda l: ''.join([ix_to_char[i] for i in l])  # decoder : take a list of integers, output a string
 
@@ -43,11 +46,14 @@ class DemandDataset(Dataset):
         self.y_train = y_train  # targets
 
     def __len__(self):
-        """This method returns the length of the dataset"""
+        """
+        This method returns the length of the dataset
+        """
         return len(self.y_train)
 
     def __getitem__(self, idx):
-        """This method overrides the getitem() function
+        """T
+        his method overrides the getitem() function
             Parameters:
                 idx: index of the item we want to get
             Returns:
@@ -58,23 +64,25 @@ class DemandDataset(Dataset):
         return data, labels
 
 
-def initialize_seq(corpus, seq_length, step_size, train=True):
-    """this function initializes inputs and targets sequences
+def initialize_seq(corpus, seq_length, step_size, perc=0.8, train=True):
+    """
+    this function initializes inputs and targets sequences
         Parameters:
             corpus: the pre-processed raw text we want to split in training and validation
             seq_length: the selected length of the sequences
             step_size: the shift of the sequences at each step
+            perc: percentage of text to use for training
             train: boolean value to choose whether we are producing training seqs or validation seqs
         Returns:
             the tuple (input sequences, targets)
     """
 
     encoded_text = encode(corpus)
-    k = int(0.8 * len(corpus))
+    k = int(perc * len(corpus))     # train: k% of text --> validation: (100-k)% of text
     if train:
-        text = encoded_text[:k]     # train, 80%
+        text = encoded_text[:k]
     else:
-        text = encoded_text[k:]     # evaluate, 20%
+        text = encoded_text[k:]
 
     inputs = []     # input sequences
     targets = []    # target characters for each input seq

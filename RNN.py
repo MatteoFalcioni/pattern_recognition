@@ -9,11 +9,10 @@ import models
 import data_config
 from data_config import initialize_seq, vocab_size, fulltext
 
+# this file contains the main script to train and generate text from the models
+
 # Device config. Use GPU if possible, else use CPU
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-# fix the seed for reproducibility
-torch.manual_seed(1234567890)
 
 # ----------------------------------- user interface ----------------------------------- #
 print('please, insert the configuration file name in order to get the hyperparameters. If you want to use default '
