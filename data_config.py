@@ -17,10 +17,9 @@ torch.manual_seed(1234567890)
 file_name = 'divinacommedia.txt'
 fulltext = open(file_name, 'rb').read().decode(encoding='utf-8').lower()
 
+# build the vocabulary of characters and mappings to / from integers
 chars = sorted(list(set(fulltext)))
 fulltext_len, vocab_size = len(fulltext), len(chars)
-
-# build the vocabulary of characters and mappings to / from integers
 char_to_ix = {ch: i for i, ch in enumerate(chars)}
 ix_to_char = {i: ch for i, ch in enumerate(chars)}
 

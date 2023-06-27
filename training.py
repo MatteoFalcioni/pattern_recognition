@@ -78,7 +78,7 @@ def save_data(model_choice, epoch_tr_losses, epoch_ev_losses, epoch_perplexities
                 epoch_ev_losses: the validation loss over epochs
                 epoch_perplexities: the perplexity over epochs
                 training_time: the elapsed time during training
-                SAVE: string values between [saving, discard] to choose whether to save the model's state_dict or not
+                save: string values between [saving, discard] to choose whether to save the model's state_dict or not
                 model: the model whose state_dict should be saved or discarded
         Returns:
             None

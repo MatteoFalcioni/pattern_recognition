@@ -6,6 +6,8 @@ import configparser
 from torch.utils.data import DataLoader
 import models
 import data_config
+import training
+from training import train, validation, save_data
 from data_config import initialize_seq, vocab_size, fulltext, get_parser
 
 """
@@ -77,8 +79,8 @@ if TRAIN == 'train':
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=DECAY_STEP, gamma=DECAY_RATE)  # lr decay through epochs
 
     previous_val_loss = float('inf')
-    epoch_tr_loss = 0
-    epoch_ev_loss = 0
+    # epoch_tr_loss = 0
+    # epoch_ev_loss = 0
     epoch_tr_losses = []
     epoch_ev_losses = []
     epoch_perplexities = []
@@ -87,7 +89,11 @@ if TRAIN == 'train':
     print('starting training and evaluation...')
     for epoch in range(NUM_EPOCHS):
         print(f'epoch [{epoch}/{NUM_EPOCHS}]')
-        for X, y in tr_dataloader:
+
+        epoch_tr_loss = train(model, tr_dataloader, optimizer, criterion)
+        epoch_tr_losses.append(epoch_tr_loss)
+
+        """for X, y in tr_dataloader:
             # training
             model.train()
 
@@ -104,9 +110,9 @@ if TRAIN == 'train':
 
         epoch_tr_losses.append(epoch_tr_loss)
         epoch_tr_loss = 0
-        epoch_perplexity = 0
+        epoch_perplexity = 0"""
 
-        for X, y in ev_dataloader:
+        """for X, y in ev_dataloader:
             # evaluation
             model.eval()
 
@@ -116,12 +122,14 @@ if TRAIN == 'train':
                 ev_loss = criterion(out, y)
 
                 epoch_ev_loss += ev_loss.item() / float(n_eval)
-                epoch_perplexity += math.exp(ev_loss.item())/float(n_eval)  # 'average' perplexity
+                epoch_perplexity += math.exp(ev_loss.item())/float(n_eval)  # 'average' perplexity"""
+
+        epoch_ev_loss, epoch_perplexity = validation(model, ev_dataloader, criterion)
 
         epoch_ev_losses.append(epoch_ev_loss)
-        epoch_ev_loss = 0
+        # epoch_ev_loss = 0
         epoch_perplexities.append(epoch_perplexity)
-        epoch_perplexity = 0
+        # epoch_perplexity = 0
 
         # Check for overfitting
         if epoch_ev_loss >= previous_val_loss and epoch > MIN_EPOCHS:
@@ -134,19 +142,17 @@ if TRAIN == 'train':
         scheduler.step()    # lr = lr*DECAY_RATE after DECAY_STEP steps
 
         print(f'avg epoch #{epoch} train loss: {epoch_tr_losses[epoch]}\navg epoch #{epoch} validation loss: {epoch_ev_losses[epoch]}')
-        tr_losses = []
-        ev_losses = []
 
-    # write losses to file
+    end = time.time()
+    training_time = end - start
+    save_data(model_choice, epoch_tr_losses, epoch_ev_losses, epoch_perplexities, training_time, SAVE, model)
+    """# write losses to file
     file_toplot = f'toplot/{model_choice}_toplot.txt'
     with open(file_toplot, 'w') as file:
         # Zip the lists and iterate over the pairs
         for tr_loss, ev_loss, perplexity in zip(epoch_tr_losses, epoch_ev_losses, epoch_perplexities):
             # Write the values to the file with a space in between
             file.write(f'{tr_loss}\t{ev_loss}\t{perplexity}\n')
-
-    end = time.time()
-    training_time = end - start
 
     with open('toplot/efficiency.txt', 'a') as file:    # write training time to file
         file.write(f'\n{model_choice}\t{training_time}')
@@ -155,11 +161,11 @@ if TRAIN == 'train':
         # saving the model's state_dict
         PATH = f'pretrained/{model_choice}.pth'
         torch.save(model.state_dict(), PATH)  # this is saved in train mode (!)
-        print('model has been saved successfully')
+        print('model has been saved successfully')"""
 
 # end of training
 
-# generate (if trained, generates text after training)
+# generate text (if trained, generates text after training)
 seed_seq = 'nel mezzo del cammin di nostra vita'
 sample_seq = [c for c in seed_seq]
 sample_len = 250
