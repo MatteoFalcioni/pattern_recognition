@@ -58,8 +58,8 @@ tr_inputs, tr_targets = initialize_seq(fulltext, SEQ_LENGTH, STEP_SIZE)
 ev_inputs, ev_targets = initialize_seq(fulltext, SEQ_LENGTH, STEP_SIZE, train=False)
 tr_dataset = data_config.DemandDataset(torch.tensor(tr_inputs).to(device), torch.tensor(tr_targets).to(device))
 ev_dataset = data_config.DemandDataset(torch.tensor(ev_inputs).to(device), torch.tensor(ev_targets).to(device))
-tr_dataloader = DataLoader(tr_dataset, shuffle=True, batch_size=BATCH_SIZE)     # training set (80% of data)
-ev_dataloader = DataLoader(ev_dataset, shuffle=True, batch_size=BATCH_SIZE)     # validation set (20% of data)
+tr_dataloader = DataLoader(tr_dataset, shuffle=True, batch_size=BATCH_SIZE)     # training set
+ev_dataloader = DataLoader(ev_dataset, shuffle=True, batch_size=BATCH_SIZE)     # validation set
 n_train = len(tr_dataloader)
 n_eval = len(ev_dataloader)
 
@@ -69,7 +69,6 @@ if TRAIN == 'generate':
     model.load_state_dict(state_dict)   # load pre-trained state dict
     model.to(device)    # send it to gpu
     model.eval()    # models are saved in train mode
-
 
 if TRAIN == 'train':
     # Loss and optimizer

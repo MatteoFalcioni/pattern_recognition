@@ -13,7 +13,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 torch.manual_seed(1234567890)
 
 config = configparser.ConfigParser()
-config.read('configuration.txt')
+config.read('test_config.txt')
 
 # hyperparameters
 SEQ_LENGTH = int(config.get('Hyperparameters', 'SEQ_LENGTH'))
@@ -62,8 +62,10 @@ test_seed = model.embedding(torch.tensor(encode(test_seq)))
 
 
 def test_sample():
-    """ this function tests  the correct functioning of sample(),
-    by checking that for a big number of samples the sampled distribution tends to the real one"""
+    """
+    this function tests the correct functioning of sample(),
+    by checking that for a delta distribution of a test character, the same character is always sampled
+    """
     output, _ = model.system(test_seed)
     output = output[-1, :]  # select last char probabilities
     logits = model.fc(output)
