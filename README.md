@@ -18,7 +18,24 @@ git clone https://github.com/MatteoFalcioni/pattern_recognition.git
 ```
 
 Then, you will need to install PyTorch by running the command
-```pip install torch```
+```
+pip install torch
+```
+
+To train the model or to generate text from it, simply run ```RNN.py``` and specify relevant command line arguments. The possible arguments are: 
+- ```--MODEL``` or ```-m``` which specifies the chosen model between RNN, LSTM and GRU;
+- ```--CONFIG``` or ```-c``` which specifies the configuration file path containing the model hyperparameters;
+- ```--TRAINING``` or ```-t``` which specifies whether the model is going to be trained or if it is will be used only for inference
+- ```--SAVING``` or ```-s``` which specifies whether the trained model's parameters should be saved for future usage. 
+
+For example, to run training using one of the provided configuration file in the [configuration](configuration) folder, run the following in the terminal:
+```
+python RNN.py -c configuration\config_LSTM.txt  -m LSTM -t train -s discard
+```
+
+
+
+
 
 Now you can use this program in two ways: 
 * you can use a pretrained model, contained in the [pretrained](pretrained) folder, to generate text in the style of Dante's Divina Commedia. 
