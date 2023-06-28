@@ -15,14 +15,13 @@ this file contains the main script to train and generate text from the models.
 # Device config. Use GPU if possible, else use CPU
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-
 # Command line argument parser. See `data_config.get_parser()`.
 parser = get_parser()
 args = parser.parse_args()
 hyperParam_path = args.CONFIG   # path to the Hyperparameters configuration file
 model_choice = args.MODEL   # chosen model
 TRAIN = args.TRAINING   # choice between training or inference
-SAVE = args.SAVING  # choice whether to save or not the model parameters
+SAVE = args.SAVING  # choice whether to save or not the model parameters after training
 
 
 # get hyperparameters from configuration file
