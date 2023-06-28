@@ -1,13 +1,11 @@
 import torch
 import torch.nn as nn
-import math
 import time
 import configparser
 from torch.utils.data import DataLoader
-import models
+import models as mdl
 import data_config
-import training
-from training import train, validation, save_data
+from training import train_epochs, save_data, inference
 from data_config import initialize_seq, vocab_size, fulltext, get_parser
 
 """
@@ -21,9 +19,6 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # Command line argument parser. See `data_config.get_parser()`.
 parser = get_parser()
 args = parser.parse_args()
-
-config = configparser.ConfigParser()
-
 hyperParam_path = args.CONFIG   # path to the Hyperparameters configuration file
 model_choice = args.MODEL   # chosen model
 TRAIN = args.TRAINING   # choice between training or inference
@@ -31,6 +26,7 @@ SAVE = args.SAVING  # choice whether to save or not the model parameters
 
 
 # get hyperparameters from configuration file
+config = configparser.ConfigParser()
 config.read(hyperParam_path)
 SEQ_LENGTH = int(config.get('Hyperparameters', 'SEQ_LENGTH'))
 STEP_SIZE = int(config.get('Hyperparameters', 'STEP_SIZE'))
@@ -47,12 +43,13 @@ MIN_EPOCHS = int(config.get('Hyperparameters', 'MIN_EPOCHS'))
 INPUT_SIZE = vocab_size
 OUTPUT_SIZE = vocab_size
 
+# create model
 if model_choice == 'RNN':
-    model = models.RNN(INPUT_SIZE, OUTPUT_SIZE, EMBEDDING_DIM, HIDDEN_SIZE, NUM_LAYERS).to(device)
+    model = mdl.RNN(INPUT_SIZE, OUTPUT_SIZE, EMBEDDING_DIM, HIDDEN_SIZE, NUM_LAYERS).to(device)
 elif model_choice == 'LSTM':
-    model = models.LSTM(INPUT_SIZE, OUTPUT_SIZE, EMBEDDING_DIM, HIDDEN_SIZE, NUM_LAYERS).to(device)
+    model = mdl.LSTM(INPUT_SIZE, OUTPUT_SIZE, EMBEDDING_DIM, HIDDEN_SIZE, NUM_LAYERS).to(device)
 elif model_choice == 'GRU':
-    model = models.GRU(INPUT_SIZE, OUTPUT_SIZE, EMBEDDING_DIM, HIDDEN_SIZE, NUM_LAYERS).to(device)
+    model = mdl.GRU(INPUT_SIZE, OUTPUT_SIZE, EMBEDDING_DIM, HIDDEN_SIZE, NUM_LAYERS).to(device)
 
 
 # initialize inputs and targets for train and validation
@@ -73,108 +70,25 @@ if TRAIN == 'generate':
     model.eval()    # models are saved in train mode
 
 if TRAIN == 'train':
+    start = time.time()
+
     # Loss and optimizer
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=LEARNING_RATE)   # SGD works better than Adam for this task
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=DECAY_STEP, gamma=DECAY_RATE)  # lr decay through epochs
 
-    previous_val_loss = float('inf')
-    # epoch_tr_loss = 0
-    # epoch_ev_loss = 0
-    epoch_tr_losses = []
-    epoch_ev_losses = []
-    epoch_perplexities = []
-
-    start = time.time()
-    print('starting training and evaluation...')
-    for epoch in range(NUM_EPOCHS):
-        print(f'epoch [{epoch}/{NUM_EPOCHS}]')
-
-        epoch_tr_loss = train(model, tr_dataloader, optimizer, criterion)
-        epoch_tr_losses.append(epoch_tr_loss)
-
-        """for X, y in tr_dataloader:
-            # training
-            model.train()
-
-            # forward pass
-            outputs, h_n = model(X)
-            tr_loss = criterion(outputs, y)
-
-            # backward and optimize
-            optimizer.zero_grad()
-            tr_loss.backward()
-            optimizer.step()
-
-            epoch_tr_loss += tr_loss.item() / float(n_train)
-
-        epoch_tr_losses.append(epoch_tr_loss)
-        epoch_tr_loss = 0
-        epoch_perplexity = 0"""
-
-        """for X, y in ev_dataloader:
-            # evaluation
-            model.eval()
-
-            with torch.no_grad():
-                # evaluate loss on eval set
-                out, _ = model(X)
-                ev_loss = criterion(out, y)
-
-                epoch_ev_loss += ev_loss.item() / float(n_eval)
-                epoch_perplexity += math.exp(ev_loss.item())/float(n_eval)  # 'average' perplexity"""
-
-        epoch_ev_loss, epoch_perplexity = validation(model, ev_dataloader, criterion)
-
-        epoch_ev_losses.append(epoch_ev_loss)
-        # epoch_ev_loss = 0
-        epoch_perplexities.append(epoch_perplexity)
-        # epoch_perplexity = 0
-
-        # Check for overfitting
-        if epoch_ev_loss >= previous_val_loss and epoch > MIN_EPOCHS:
-            print("Overfitting detected! Stopping the training loop...")
-            break
-
-        # Update the previous validation loss variable
-        previous_val_loss = epoch_ev_loss
-
-        scheduler.step()    # lr = lr*DECAY_RATE after DECAY_STEP steps
-
-        print(f'avg epoch #{epoch} train loss: {epoch_tr_losses[epoch]}\navg epoch #{epoch} validation loss: {epoch_ev_losses[epoch]}')
+    # training function
+    epoch_tr_losses, epoch_ev_losses, epoch_perplexities = train_epochs(model, tr_dataloader, ev_dataloader, criterion,
+                                                                        optimizer, scheduler, NUM_EPOCHS, MIN_EPOCHS)
 
     end = time.time()
     training_time = end - start
     save_data(model_choice, epoch_tr_losses, epoch_ev_losses, epoch_perplexities, training_time, SAVE, model)
-    """# write losses to file
-    file_toplot = f'toplot/{model_choice}_toplot.txt'
-    with open(file_toplot, 'w') as file:
-        # Zip the lists and iterate over the pairs
-        for tr_loss, ev_loss, perplexity in zip(epoch_tr_losses, epoch_ev_losses, epoch_perplexities):
-            # Write the values to the file with a space in between
-            file.write(f'{tr_loss}\t{ev_loss}\t{perplexity}\n')
 
-    with open('toplot/efficiency.txt', 'a') as file:    # write training time to file
-        file.write(f'\n{model_choice}\t{training_time}')
-
-    if SAVE == 'saving':
-        # saving the model's state_dict
-        PATH = f'pretrained/{model_choice}.pth'
-        torch.save(model.state_dict(), PATH)  # this is saved in train mode (!)
-        print('model has been saved successfully')"""
-
-# end of training
 
 # generate text (if trained, generates text after training)
-seed_seq = 'nel mezzo del cammin di nostra vita'
-sample_seq = [c for c in seed_seq]
-sample_len = 250
-for step in range(sample_len):
-    prediction = model.sample(sample_seq)
-    sample_seq.append(prediction)
-sampled_txt = ''.join(sample_seq)
+sampled_txt = inference(model)
 print(f'sampled text from {model_choice}: {sampled_txt}')
-true_text = fulltext[:len(sample_seq)]
 
 
 

@@ -3,7 +3,7 @@ import torch.nn as nn
 import math
 
 """
-this file contains the training() and validation() functions to run in the training loop.
+this file contains the functions to train and validate the chosen model, and to eventually save its data
 """
 
 
@@ -39,15 +39,15 @@ def train(model, tr_dataloader, optimizer, loss_fn=nn.CrossEntropyLoss()):
     return epoch_tr_loss
 
 
-def validation(model, ev_dataloader, loss_fn=nn.CrossEntropyLoss()):
+def validate(model, ev_dataloader, loss_fn=nn.CrossEntropyLoss()):
     """
-        this function trains the given model on the training data, returning the loss for each epoch
+        this function validates the given model on the validation data, returning the loss for each epoch
             Parameters:
-                model: the model to train
+                model: the model to validate
                 ev_dataloader: the dataloader to get the validation data
                 loss_fn: the loss function to compute the loss
             Returns:
-                the validation loss and the perplexity (both averaged over training steps)
+                the validation loss and the perplexity (both averaged over validation steps)
     """
 
     epoch_ev_loss = 0
@@ -99,4 +99,72 @@ def save_data(model_choice, epoch_tr_losses, epoch_ev_losses, epoch_perplexities
         path = f'pretrained/{model_choice}.pth'
         torch.save(model.state_dict(), path)  # this is saved in train mode (!)
         print('model has been saved successfully')
+
+
+def train_epochs(model, tr_dataloader, ev_dataloader, loss_fn, optimizer, scheduler, num_epochs, min_epochs):
+    """
+        this function trains the chosen model over epochs, while also checking for overfitting
+            Parameters:
+                    model: the chosen model between RNN, LSTM and GRU
+                    tr_dataloader: the dataloader to get the training data
+                    ev_dataloader: the dataloader to get the validation data
+                    loss_fn: the loss function to compute the loss
+                    optimizer: the chosen optimizer for the loss
+                    scheduler: the chosen scheduler for lr decay
+                    num_epochs: the number of epochs for which the model will be trained
+                    min_epochs: the epoch number from which the checking for overfitting will start
+            Returns:
+                lists containing training loss, validation loss and perplexity for each epoch
+        """
+
+    previous_val_loss = float('inf')
+    epoch_tr_losses = []
+    epoch_ev_losses = []
+    epoch_perplexities = []
+
+    print('starting training and evaluation...')
+    for epoch in range(num_epochs):
+        print(f'epoch [{epoch}/{num_epochs}]')
+
+        # training
+        epoch_tr_loss = train(model, tr_dataloader, optimizer, loss_fn)
+        epoch_tr_losses.append(epoch_tr_loss)
+
+        # validation
+        epoch_ev_loss, epoch_perplexity = validate(model, ev_dataloader, loss_fn)
+        epoch_ev_losses.append(epoch_ev_loss)
+        epoch_perplexities.append(epoch_perplexity)
+
+        # Check for overfitting
+        if epoch_ev_loss >= previous_val_loss and epoch > min_epochs:
+            print("Overfitting detected! Stopping the training loop...")
+            break
+        # Update the previous validation loss variable
+        previous_val_loss = epoch_ev_loss
+
+        scheduler.step()  # lr = lr*DECAY_RATE after DECAY_STEP steps
+
+        print(f'avg epoch #{epoch} train loss: {epoch_tr_losses[epoch]}\navg epoch'
+              f' #{epoch} validation loss: {epoch_ev_losses[epoch]}')
+
+    return epoch_tr_losses, epoch_ev_losses, epoch_perplexities
+
+
+def inference(model, seed_seq='nel mezzo del cammin di nostra vita', sample_len=250):
+    """
+    this function performs inference from the chosen model, generating text from a seed sequence
+        Parameters:
+            model:
+            seed_seq:
+            sample_len:
+        Returns:
+            the sampled text from the model
+    """
+    sample_seq = [c for c in seed_seq]
+    for step in range(sample_len):
+        prediction = model.sample(sample_seq)
+        sample_seq.append(prediction)
+    sampled_txt = ''.join(sample_seq)
+
+    return sampled_txt
 
