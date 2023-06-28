@@ -78,8 +78,8 @@ if TRAIN == 'train':
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=DECAY_STEP, gamma=DECAY_RATE)  # lr decay through epochs
 
     # training
-    epoch_tr_losses, epoch_ev_losses, epoch_perplexities = train_epochs(model, tr_dataloader, ev_dataloader, criterion,
-                                                                        optimizer, scheduler, NUM_EPOCHS, MIN_EPOCHS)
+    epoch_tr_losses, epoch_ev_losses, epoch_perplexities = train_epochs(model, tr_dataloader, ev_dataloader, NUM_EPOCHS,
+                                                                        MIN_EPOCHS, optimizer, scheduler, criterion)
 
     end = time.time()
     training_time = end - start
