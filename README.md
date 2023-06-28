@@ -33,7 +33,7 @@ For example, to run training using one of the provided configuration file in the
 python RNN.py -c configuration\config_LSTM.txt  -m LSTM -t train -s discard
 ```
 
-If you want to plot the stored training data in the [toplot](folder), simply run `plot.py`
+If you want to plot the stored training data in the [toplot](toplot) folder, simply run `plot.py`
 
 To show you some results: these are the plots of the losses and the perplexities after training, and the elapsed time during trainings:
 
@@ -51,13 +51,14 @@ GRU: "nel mezzo del cammin di nostra vita di che tante più dal lungi vien corto
 
 ## Structure
 This is how the project has been divided into blocks: 
-- In the [configuration](configuration.txt) file there are the hyperparameters to configurate the model.
-- In the [pretrained](pretrained) folder you can find pretrained models to use.
-- In the file [models.py](models.py) there are the RNN, LSTM and GRU classes (LSTM and GRU inherit from RNN) 
-- In the file [data_config.py](data_config.py) there are the Dataloader class and the encoder and decoder functions.  
-- In the file [TEST_RNN.py](TEST_RNN.py) I have put the testing I have done.
-- The file [RNN.py](RNN.py) contains the main part of the code, with the training loop and the text generation loop.
+- In the [configuration](configuration) folder there are the hyperparameters to configurate the models.
+- In the [pretrained](pretrained) folder you can find pretrained models to use for inference, without needing to go through training.
+- In the file [models.py](models.py) there are the RNN, LSTM and GRU class definitions. 
+- The file [data_config.py](data_config.py) contains some utility functions for data configuration and data preprocessing.
+- The file [training.py](training.py) contains the training and validation functions, and the inference function to generate text.
+- The file [RNN.py](RNN.py) is the main script; here datasets are instantiated and training and inference are run.
 - In the file [plot.py](plot.py) there is the script to plot the results, which are contained in the [toplot](toplot) repository and rewritten after training.
+- In the file [testing.py](testing.py) I have put all the testing I have done.
 
 ## Theory
 Recurrent Neural Networks (RNNs) are a class of neural networks that are well-suited for sequential data, such as text. They have the ability to retain information from previous steps and use it to make predictions or generate new sequences. In this project, we explore the effectiveness of RNNs by comparing two popular variants: LSTM and GRU. To evaluate the performance of LSTM and GRU models, we train them on a dataset consisting of Dante's Divina Commedia. The models are then used to generate text that resembles the style and language of the original work.
