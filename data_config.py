@@ -65,6 +65,29 @@ class DemandDataset(Dataset):
         return data, labels
 
 
+def get_parser():
+    """
+    Returns parser for choosing:
+    - the configuration file, with -c
+    - what model to use, with -m
+    - whether to train the model or generate from it, with -t
+    - whether to save or discard the trained parameters, with -s
+    """
+    parser = argparse.ArgumentParser(description='Argument Parser')
+    parser.add_argument('-c', '--CONFIG', help='configuration file path', default='configuration/config_RNN.txt',
+                        type=str)
+    parser.add_argument('-m', '--MODEL', choices=['RNN', 'LSTM', 'GRU'], help='Choose the model', default='RNN',
+                        type=str)
+    parser.add_argument('-t', '--TRAINING', choices=['train', 'generate'], help='Choose if the model is going to be '
+                                                                                'trained or if it is just generating '
+                                                                                'text', default='generate',
+                        type=str)
+    parser.add_argument('-s', '--SAVING', choices=['save', 'discard'], help='Choose if the trained model needs to be '
+                                                                            'saved', default='discard',
+                        type=str)
+    return parser
+
+
 def encode(input_string, encoder=char_to_ix):
     """
     this function encodes a string into a list of integers
@@ -97,29 +120,6 @@ def decode(input_list, decoder=ix_to_char):
     return decoded_string
 
 
-def get_parser():
-    """
-    Returns parser for choosing:
-    - the configuration file, with -c
-    - what model to use, with -m
-    - whether to train the model or generate from it, with -t
-    - whether to save or discard the trained parameters, with -s
-    """
-    parser = argparse.ArgumentParser(description='Argument Parser')
-    parser.add_argument('-c', '--CONFIG', help='configuration file path', default='configuration/config_RNN.txt',
-                        type=str)
-    parser.add_argument('-m', '--MODEL', choices=['RNN', 'LSTM', 'GRU'], help='Choose the model', default='RNN',
-                        type=str)
-    parser.add_argument('-t', '--TRAINING', choices=['train', 'generate'], help='Choose if the model is going to be '
-                                                                                'trained or if it is just generating '
-                                                                                'text', default='generate',
-                        type=str)
-    parser.add_argument('-s', '--SAVING', choices=['save', 'discard'], help='Choose if the trained model needs to be '
-                                                                            'saved', default='discard',
-                        type=str)
-    return parser
-
-
 def initialize_seq(corpus, seq_length, step_size, perc=0.8, train=True):
     """
     this function initializes inputs and targets sequences
@@ -134,7 +134,7 @@ def initialize_seq(corpus, seq_length, step_size, perc=0.8, train=True):
     """
 
     encoded_text = encode(corpus)
-    k = int(perc * len(corpus))     # train: k% of text --> validation: (100-k)% of text
+    k = int(perc * len(corpus))     # train: (perc*100) of text --> validation: (100 - perc*100)% of text
     if train:
         text = encoded_text[:k]
     else:

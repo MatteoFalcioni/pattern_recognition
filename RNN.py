@@ -77,12 +77,14 @@ if TRAIN == 'train':
     optimizer = torch.optim.SGD(model.parameters(), lr=LEARNING_RATE)   # SGD works better than Adam for this task
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=DECAY_STEP, gamma=DECAY_RATE)  # lr decay through epochs
 
-    # training function
+    # training
     epoch_tr_losses, epoch_ev_losses, epoch_perplexities = train_epochs(model, tr_dataloader, ev_dataloader, criterion,
                                                                         optimizer, scheduler, NUM_EPOCHS, MIN_EPOCHS)
 
     end = time.time()
     training_time = end - start
+
+    # saving the training data
     save_data(model_choice, epoch_tr_losses, epoch_ev_losses, epoch_perplexities, training_time, SAVE, model)
 
 
