@@ -23,7 +23,7 @@ pip install torch
 ```
 
 To train the model or to generate text from it, simply run ```RNN.py``` and specify relevant command line arguments. The [possible arguments](https://github.com/MatteoFalcioni/pattern_recognition/blob/51d8459fb33a9cc0d4d33f660cab349632f86242/data_config.py#L68) are: 
-- ```--MODEL``` or ```-m``` which specifies the chosen model between RNN, LSTM and GRU;
+- ```--MODEL``` or ```-m``` which specifies the chosen;
 - ```--CONFIG``` or ```-c``` which specifies the configuration file path containing the model's hyperparameters;
 - ```--TRAINING``` or ```-t``` which specifies whether the model is going to be trained or if it will be used only for inference;
 - ```--SAVING``` or ```-s``` which specifies whether the trained model's parameters should be saved for future usage or discarded. 
