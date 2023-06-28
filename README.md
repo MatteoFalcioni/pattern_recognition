@@ -33,9 +33,9 @@ For example, to run training using one of the provided configuration file in the
 python RNN.py -c configuration\config_LSTM.txt  -m LSTM -t train -s discard
 ```
 
-If you want to plot the stored training data (toplot) , you must launch the file [plot.py](plot.py). 
+If you want to plot the stored training data in the [toplot](folder), simply run `plot.py`
 
-To show you some results: these are the plots of the losses and the perplexities after training, and the training times:
+To show you some results: these are the plots of the losses and the perplexities after training, and the elapsed time during trainings:
 
 <img src="readme_img/losses.png" alt="" width="900">
 
