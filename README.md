@@ -30,7 +30,7 @@ To train the model or to generate text from it, simply run ```RNN.py``` and spec
 
 For example, to run training using one of the provided configuration file in the [configuration](configuration) folder, run the following in the terminal:
 ```
-python RNN.py -c configuration\config_LSTM.txt  -m LSTM -t train -s discard
+python RNN.py -c configuration\config_LSTM.txt -m LSTM -t train -s discard
 ```
 
 If you want to plot the stored training data in the [toplot](toplot) folder, simply run `plot.py`
