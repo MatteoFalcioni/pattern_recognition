@@ -18,23 +18,24 @@ git clone https://github.com/MatteoFalcioni/pattern_recognition.git
 ```
 
 Then, you will need to install PyTorch by running the command
-```pip install torch```
+```
+pip install torch
+```
 
-Now you can use this program in two ways: 
-* you can use a pretrained model, contained in the [pretrained](pretrained) folder, to generate text in the style of Dante's Divina Commedia. 
-* or, you can train the model again and then generate text after. 
+To train the model or to generate text from it, simply run ```RNN.py``` and specify relevant command line arguments. The [possible arguments](https://github.com/MatteoFalcioni/pattern_recognition/blob/51d8459fb33a9cc0d4d33f660cab349632f86242/data_config.py#L68) are: 
+- ```--MODEL``` or ```-m``` which specifies the chosen model between RNN, LSTM and GRU;
+- ```--CONFIG``` or ```-c``` which specifies the configuration file path containing the model's hyperparameters;
+- ```--TRAINING``` or ```-t``` which specifies whether the model is going to be trained or if it will be used only for inference;
+- ```--SAVING``` or ```-s``` which specifies whether the trained model's parameters should be saved for future usage or discarded. 
 
-Once you have chosen your goal, in order to start the program you have to do the following steps after launching the file [RNN.py](RNN.py):
+For example, to run training using one of the provided configuration file in the [configuration](configuration) folder, run the following in the terminal:
+```
+python RNN.py -c configuration\config_LSTM.txt  -m LSTM -t train -s discard
+```
 
-1. First, you can either use the default hyperparameters for the model contained in the file [configuration](configuration.txt) by typing `default` in the command line, or eventually choose your own creating a new configuration file in the syntax of [configuration](configuration.txt). If you choose to do so, you have to specify the path to the new configuration file in the command line;
-2. Second, you will be asked what model do you want to use. Choice is between `RNN`, `LSTM` or `GRU`;
-3. Third, you will be asked if you want to train your model or use a [pretrained](pretrained) one to generate text. If you choose the first option, you must type `train` in the command line, otherwise you should type `generate`. During training, training loss and validation loss are printed at every epoch in order to check for overfitting. Such data are stored in the [toplot](toplot) folder; 
+If you want to plot the stored training data in the [toplot](toplot) folder, simply run `plot.py`
 
-If training is chosen, after training you will be asked if you want to save the new learnt parameters and therefore overwrite the pretrained models'              parameters in the [pretrained](pretrained) folder. If you are satisfied with the result (i.e. the values of the training loss and the validation loss) then you should save your model in order to use it again. 
-
-If you want to plot the stored data, you must launch the file [plot.py](plot.py). This will plot not only the losses and the perplexity but also the comparison between the elapsed time in training for the three models (stored in the [efficiency](efficiency) file).
-
-To show you some results: these are the plots of the losses and the perplexities after training, and the training times:
+To show you some results: these are the plots of the losses and the perplexities after training, and the elapsed time during trainings:
 
 <img src="readme_img/losses.png" alt="" width="900">
 
@@ -50,13 +51,14 @@ GRU: "nel mezzo del cammin di nostra vita di che tante più dal lungi vien corto
 
 ## Structure
 This is how the project has been divided into blocks: 
-- In the [configuration](configuration.txt) file there are the hyperparameters to configurate the model.
-- In the [pretrained](pretrained) folder you can find pretrained models to use.
-- In the file [models.py](models.py) there are the RNN, LSTM and GRU classes (LSTM and GRU inherit from RNN) 
-- In the file [data_config.py](data_config.py) there are the Dataloader class and the encoder and decoder functions.  
-- In the file [TEST_RNN.py](TEST_RNN.py) I have put the testing I have done.
-- The file [RNN.py](RNN.py) contains the main part of the code, with the training loop and the text generation loop.
+- In the [configuration](configuration) folder there are the hyperparameters to configurate the models.
+- In the [pretrained](pretrained) folder you can find pretrained models to use for inference, without needing to go through training.
+- In the file [models.py](models.py) there are the RNN, LSTM and GRU class definitions. 
+- The file [data_config.py](data_config.py) contains some utility functions for data configuration and data preprocessing.
+- The file [training.py](training.py) contains the training and validation functions, and the inference function to generate text.
+- The file [RNN.py](RNN.py) is the main script; here datasets are instantiated and training and inference are run.
 - In the file [plot.py](plot.py) there is the script to plot the results, which are contained in the [toplot](toplot) repository and rewritten after training.
+- In the file [testing.py](testing.py) I have put all the testing I have done.
 
 ## Theory
 Recurrent Neural Networks (RNNs) are a class of neural networks that are well-suited for sequential data, such as text. They have the ability to retain information from previous steps and use it to make predictions or generate new sequences. In this project, we explore the effectiveness of RNNs by comparing two popular variants: LSTM and GRU. To evaluate the performance of LSTM and GRU models, we train them on a dataset consisting of Dante's Divina Commedia. The models are then used to generate text that resembles the style and language of the original work.
