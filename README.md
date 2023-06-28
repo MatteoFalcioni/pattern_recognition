@@ -26,7 +26,7 @@ To train the model or to generate text from it, simply run ```RNN.py``` and spec
 - ```--MODEL``` or ```-m``` which specifies the chosen model between RNN, LSTM and GRU;
 - ```--CONFIG``` or ```-c``` which specifies the configuration file path containing the model's hyperparameters;
 - ```--TRAINING``` or ```-t``` which specifies whether the model is going to be trained or if it will be used only for inference;
-- ```--SAVING``` or ```-s``` which specifies whether the trained model's parameters should be saved for future usage or discarde. 
+- ```--SAVING``` or ```-s``` which specifies whether the trained model's parameters should be saved for future usage or discarded. 
 
 For example, to run training using one of the provided configuration file in the [configuration](configuration) folder, run the following in the terminal:
 ```
