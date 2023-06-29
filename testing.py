@@ -7,6 +7,10 @@ import data_config as dc
 from data_config import vocab_size, encode, decode, initialize_seq
 from training import train, validate, train_epochs, inference
 
+"""
+this file contains the testing of the functions in models.py, training.py and data_config.py
+"""
+
 # Device config
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -32,9 +36,8 @@ criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(test_model.parameters(), lr=LEARNING_RATE)
 scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=DECAY_STEP, gamma=DECAY_RATE)
 
+# build ad-hoc test dataset: inputs and targets are the same
 test_txt = open('test_data/test_corpus.txt', 'rb').read().decode(encoding='utf-8').lower()
-
-# build ad-hoc test dataset: inputs and targets are the same, so that the model learns to predict always the same result
 test_in, test_targ = initialize_seq(test_txt, SEQ_LENGTH, STEP_SIZE)
 test_dataset = dc.DemandDataset(torch.tensor(test_in).to(device), torch.tensor(test_targ).to(device))
 test_dataloader = DataLoader(test_dataset, batch_size=BATCH_SIZE)
@@ -42,8 +45,8 @@ test_dataloader = DataLoader(test_dataset, batch_size=BATCH_SIZE)
 
 def test_encode_decode():
     """
-    this function tests the functions encode() and decode(), by checking that the application of one first and the other
-    after results back to the initial input
+    this function tests the functions encode() and decode(), by checking that if we first encode a string and
+    then decode it we get the original string back
     """
     test_chars = 'ciao'
     assert (decode(encode(test_chars)) == test_chars)
@@ -51,12 +54,12 @@ def test_encode_decode():
 
 def test_initialize_seq():
     """
-    this function test the correct functioning of initialize_seq(),
-    by checking that, when given a certain sequence, the input list and the target list contain respectevely
-    the sequence 'windows' of chosen length and the expected character following that window
+    this function test the correct functioning of initialize_seq() by checking that, when given
+    a certain sequence, the inputs list will contain the sequence's 'windows' of size seq_length,
+    and the targets list will contain the expected character following that window by a shift of step_size
     """
     test_seq = 'abcde'
-    test_inputs, test_targets = initialize_seq(test_seq, 2, 1, perc=1.0)    # window size = 2, shift of window = 1
+    test_inputs, test_targets = initialize_seq(test_seq, 2, 1, perc=1.0)    # seq_length = 2, shift of window = 1
     assert (test_inputs[0] == [1, 2])
     assert (test_targets[0] == 3)
     assert (test_inputs[1] == [2, 3])
@@ -88,23 +91,24 @@ def test_validate():
 def test_train_epochs():
     """
         this function tests the train_epochs() function, by checking that when we train and validate on
-        the ad-hoc dataset (inputs = targets) over different epochs, all of the epoch losses tend to zero
+        the ad-hoc dataset (inputs = targets) over different epochs, all the epoch losses tend to zero
         and the epoch perplexities tend to 1. We test it for 2 epochs
     """
     epoch_tr_losses, epoch_ev_losses, epoch_perplexities = train_epochs(test_model, test_dataloader, test_dataloader,
                                                                         NUM_EPOCHS, MIN_EPOCHS, optimizer, scheduler)
     assert (epoch_tr_losses[0] < 0.01)
-    assert (epoch_tr_losses[1] < 0.01)
     assert (epoch_ev_losses[0] < 0.01)
-    assert (epoch_ev_losses[1] < 0.01)
     assert (epoch_perplexities[0] < 1.01)
+    assert (epoch_tr_losses[1] < 0.01)
+    assert (epoch_ev_losses[1] < 0.01)
     assert (epoch_perplexities[1] < 1.01)
 
 
 def test_inference():
     """
-        this function tests the inference() function, by checking that when we sample from the model trained on the
-        ad-hoc dataset, this will always infer the same letter (in our case, the letter 'a' was chosen)
+        this function tests the inference() function by checking that, when we sample from the model trained on the
+        ad-hoc dataset, the model will always infer the same letter (in our case, the letter 'a' since the ad hoc
+        dataset contains only a's)
     """
     test_sample = inference(test_model, 'init', 50)
     a_string = 'a' * 50

@@ -12,7 +12,6 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # fix the seed for reproducibility
 torch.manual_seed(1234567890)
 
-
 # data
 file_name = 'divinacommedia.txt'
 fulltext = open(file_name, 'rb').read().decode(encoding='utf-8').lower()
@@ -26,7 +25,7 @@ ix_to_char = {i: ch for i, ch in enumerate(chars)}
 
 class DemandDataset(Dataset):
     """
-        A class that inherits from the torch Dataset structure to implement custom Dataset
+        A class that inherits from the Torch Dataset structure to implement custom Dataset
 
         Attributes
         ----------
