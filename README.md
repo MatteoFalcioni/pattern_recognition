@@ -58,7 +58,7 @@ This is how the project has been divided into blocks:
 - The file [training.py](training.py) contains the training and validation functions, and the inference function to generate text.
 - The file [RNN.py](RNN.py) is the main script; here datasets are instantiated and training and inference are run.
 - In the file [plot.py](plot.py) there is the script to plot the results, which are contained in the [toplot](toplot) repository and rewritten after training.
-- In the file [testing.py](testing.py) I have put all the testing I have done.
+- In the file [testing.py](testing.py) I have put all the testing I have done. The data used for testing are stored in the [test_data](test_data) folder.
 
 ## Theory
 Recurrent Neural Networks (RNNs) are a class of neural networks that are well-suited for sequential data, such as text. They have the ability to retain information from previous steps and use it to make predictions or generate new sequences. In this project, we explore the effectiveness of RNNs by comparing two popular variants: LSTM and GRU. To evaluate the performance of LSTM and GRU models, we train them on a dataset consisting of Dante's Divina Commedia. The models are then used to generate text that resembles the style and language of the original work.
