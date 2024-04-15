@@ -161,7 +161,7 @@ class LSTM(RNN, nn.Module):
 
 class GRU(RNN, nn.Module):
     """
-        A class that implements the GRU architecture, inheriting from the nn.GRU torch module and the GRU class
+        A class that implements the GRU architecture, inheriting from the nn.GRU torch module and the RNN class
 
         Args
         ----------
